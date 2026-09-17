@@ -1,8 +1,12 @@
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FiUploadCloud, FiImage, FiX, FiSend } from "react-icons/fi";
 import { RiSparkling2Fill } from "react-icons/ri";
+import { createGrievance } from "../../lib/grievances";
+import { uploadMedia } from "../../lib/media";
 
 function CreateGrievance() {
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const [title, setTitle] = useState("");
@@ -13,9 +17,12 @@ function CreateGrievance() {
 
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGeneratedImage, setHasGeneratedImage] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -87,26 +94,71 @@ function CreateGrievance() {
     }, 800);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    if (!title.trim()) {
-      return;
+  setError("");
+  setSubmitError("");
+
+  if (!title.trim()) {
+    setSubmitError("Please enter a grievance title.");
+    return;
+  }
+
+  if (!description.trim()) {
+    setSubmitError("Please enter a grievance description.");
+    return;
+  }
+
+  if (!image) {
+    setSubmitError("Please upload an evidence image.");
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+
+    const token = sessionStorage.getItem("esicToken");
+
+    if (!token) {
+      throw new Error("Authentication session not found. Please log in again.");
     }
 
-    if (!description.trim()) {
-      return;
-    }
+    /*
+     * STEP 1
+     * Upload current evidence image to WordPress Media Library
+     */
+    const uploadedMedia = await uploadMedia(token, image);
 
-    console.log({
-      title,
-      description,
-      image,
-      aiReferenceImageGenerated: hasGeneratedImage,
+    console.log("UPLOADED MEDIA:", uploadedMedia);
+
+    /*
+     * STEP 2
+     * Create the grievance using the attachment ID
+     */
+    const grievance = await createGrievance(token, {
+      title: title.trim(),
+      description: description.trim(),
+      currentImageId: uploadedMedia.id,
     });
 
-    alert("Grievance submitted successfully.");
-  };
+    console.log("CREATED GRIEVANCE:", grievance);
+
+    /*
+     * STEP 3
+     * Go back to grievance list
+     */
+    navigate("/hospital/grievances");
+  } catch (error) {
+    console.error("CREATE GRIEVANCE ERROR:", error);
+
+    setSubmitError(
+      error.message || "Unable to submit grievance. Please try again.",
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="create-grievance-page">
@@ -275,7 +327,6 @@ function CreateGrievance() {
           </div>
 
           <div className="form-card-body">
-
             <button
               type="button"
               className="generate-ai-button"
@@ -314,14 +365,21 @@ function CreateGrievance() {
 
         {/* SUBMIT */}
 
+        {submitError && <div className="submit-error">{submitError}</div>}
+
         <div className="create-form-actions">
           <button type="button" className="cancel-button">
             Cancel
           </button>
-
-          <button type="submit" className="submit-grievance-button">
+          {submitError && <div className="submit-error">{submitError}</div>}
+          <button
+            type="submit"
+            className="submit-grievance-button"
+            disabled={isSubmitting}
+          >
             <FiSend size={17} />
-            Submit Grievance
+
+            {isSubmitting ? "Submitting..." : "Submit Grievance"}
           </button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   FiFileText,
@@ -8,11 +8,12 @@ import {
   FiUsers,
   FiPlus,
   FiArrowRight,
-  FiX,
+  FiInbox,
 } from "react-icons/fi";
 
-import grievances from "../../data/grievances.json";
 import { Link } from "react-router-dom";
+import { getGrievances } from "../../lib/grievances";
+import GrievanceModal from "../../components/hospital/GrievanceModal";
 
 function StatCard({ icon: Icon, title, value, type }) {
   return (
@@ -31,29 +32,78 @@ function StatCard({ icon: Icon, title, value, type }) {
 }
 
 function getStatusClass(status) {
-  switch (status) {
-    case "Pending":
-      return "pending";
-
-    case "In Progress":
-      return "in-progress";
-
-    case "Resolved":
-      return "resolved";
-
-    case "Rejected":
-      return "rejected";
-
-    case "Delegated to ESIC":
-      return "delegated";
-
-    default:
-      return "";
+  if (!status) {
+    return "";
   }
+
+  return String(status).toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
+}
+
+function formatDisplayDate(value) {
+  if (!value || value === "N/A") return "N/A";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function HospitalDashboard({ hospitalName = "ESIC User" }) {
+  const [grievances, setGrievances] = useState([]);
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadGrievances() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = sessionStorage.getItem("esicToken");
+
+        if (!token) {
+          throw new Error("Authentication session not found.");
+        }
+
+        const data = await getGrievances(token);
+
+        const formattedGrievances = data.map((grievance) => {
+          const details = grievance.grievanceDetails || {};
+
+          return {
+            id: grievance.databaseId,
+            tokenNo: details.tokenNumber || "N/A",
+            title: grievance.title || "Untitled Grievance",
+            submittedOn: formatDisplayDate(grievance.date),
+            lastUpdated: formatDisplayDate(grievance.modified),
+            status: grievance.statusLabel || "",
+            description: details.description || "",
+            image: grievance.currentImageUrl || null,
+            generatedImageUrl: grievance.generatedImageUrl || null,
+          };
+        });
+
+        setGrievances(formattedGrievances);
+      } catch (err) {
+        console.error("Failed to load grievances:", err);
+
+        setError(err.message || "Unable to load grievances. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGrievances();
+  }, []);
 
   const totalGrievances = grievances.length;
 
@@ -92,7 +142,10 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
           </p>
         </div>
 
-        <Link to="/hospital/grievances/create" className="create-grievance-button">
+        <Link
+          to="/hospital/grievances/create"
+          className="create-grievance-button"
+        >
           <FiPlus size={21} />
 
           <span>Create Grievance</span>
@@ -105,35 +158,35 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         <StatCard
           icon={FiFileText}
           title="Total Grievances"
-          value={totalGrievances}
+          value={loading ? "—" : totalGrievances}
           type="total"
         />
 
         <StatCard
           icon={FiClock}
           title="Pending"
-          value={pendingCount}
+          value={loading ? "—" : pendingCount}
           type="pending"
         />
 
         <StatCard
           icon={FiCheckCircle}
           title="Resolved"
-          value={resolvedCount}
+          value={loading ? "—" : resolvedCount}
           type="resolved"
         />
 
         <StatCard
           icon={FiXCircle}
           title="Rejected"
-          value={rejectedCount}
+          value={loading ? "—" : rejectedCount}
           type="rejected"
         />
 
         <StatCard
           icon={FiUsers}
           title="Delegated to ESIC"
-          value={delegatedCount}
+          value={loading ? "—" : delegatedCount}
           type="delegated"
         />
       </div>
@@ -144,11 +197,11 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         <div className="section-header">
           <h2>Recent Grievances</h2>
 
-          <button type="button" className="view-all">
+          <Link to="/hospital/grievances" className="view-all">
             <span>View All</span>
 
             <FiArrowRight size={17} />
-          </button>
+          </Link>
         </div>
 
         <div className="grievance-table-wrapper">
@@ -165,35 +218,67 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
             </thead>
 
             <tbody>
-              {grievances.slice(0, 5).map((grievance) => (
-                <tr key={grievance.tokenNo}>
-                  <td>{grievance.tokenNo}</td>
-
-                  <td className="grievance-title-cell">{grievance.title}</td>
-
-                  <td>{grievance.submittedOn}</td>
-
-                  <td>{grievance.lastUpdated}</td>
-
-                  <td>
-                    <span
-                      className={`status ${getStatusClass(grievance.status)}`}
-                    >
-                      {grievance.status}
-                    </span>
-                  </td>
-
-                  <td>
-                    <button
-                      type="button"
-                      className="table-view"
-                      onClick={() => setSelectedGrievance(grievance)}
-                    >
-                      View
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="table-message">
+                    Loading grievances...
                   </td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan="6" className="table-message error">
+                    {error}
+                  </td>
+                </tr>
+              ) : grievances.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="table-message">
+                    <div className="empty-grievances">
+                      <div className="empty-grievances-icon">
+                        <FiInbox size={25} />
+                      </div>
+
+                      <div className="empty-grievances-copy">
+                        <strong>No grievances yet</strong>
+
+                        <span>
+                          Submit your first grievance to start tracking it here.
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                grievances.slice(0, 5).map((grievance) => (
+                  <tr key={grievance.id}>
+                    <td>{grievance.tokenNo}</td>
+
+                    <td className="grievance-title-cell">{grievance.title}</td>
+
+                    <td>{grievance.submittedOn}</td>
+
+                    <td>{grievance.lastUpdated}</td>
+
+                    <td>
+                      <span
+                        className={`status ${getStatusClass(grievance.status)}`}
+                      >
+                        {grievance.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        className="table-view"
+                        onClick={() => setSelectedGrievance(grievance)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -201,106 +286,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
       {/* GRIEVANCE MODAL */}
 
-      {selectedGrievance && (
-        <div className="grievance-modal-overlay" onClick={closeModal}>
-          <div
-            className="grievance-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {/* MODAL HEADER */}
-
-            <div className="grievance-modal-header">
-              <div>
-                <div className="modal-eyebrow">GRIEVANCE DETAILS</div>
-
-                <h2>{selectedGrievance.title}</h2>
-
-                <div className="modal-token">{selectedGrievance.tokenNo}</div>
-              </div>
-
-              <button
-                type="button"
-                className="modal-close"
-                onClick={closeModal}
-                aria-label="Close modal"
-              >
-                <FiX size={21} />
-              </button>
-            </div>
-
-            {/* MODAL BODY */}
-
-            <div className="grievance-modal-body">
-              <div className="modal-status-row">
-                <span className="modal-label">Status</span>
-
-                <span
-                  className={`status ${getStatusClass(
-                    selectedGrievance.status,
-                  )}`}
-                >
-                  {selectedGrievance.status}
-                </span>
-              </div>
-
-              <div className="modal-details">
-                <div className="modal-detail">
-                  <span className="modal-label">Token Number</span>
-
-                  <strong>{selectedGrievance.tokenNo}</strong>
-                </div>
-
-                <div className="modal-detail">
-                  <span className="modal-label">Submitted On</span>
-
-                  <strong>{selectedGrievance.submittedOn}</strong>
-                </div>
-
-                <div className="modal-detail">
-                  <span className="modal-label">Last Updated</span>
-
-                  <strong>{selectedGrievance.lastUpdated}</strong>
-                </div>
-              </div>
-
-              {/* DESCRIPTION */}
-
-              <div className="modal-description">
-                <span className="modal-label">Description</span>
-
-                <p>{selectedGrievance.description}</p>
-              </div>
-
-              {/* IMAGE */}
-
-              {selectedGrievance.image && (
-                <div className="modal-evidence">
-                  <span className="modal-label">Evidence</span>
-
-                  <div className="modal-image-wrapper">
-                    <img
-                      src={selectedGrievance.image}
-                      alt={selectedGrievance.title}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* MODAL FOOTER */}
-
-            <div className="grievance-modal-footer">
-              <button
-                type="button"
-                className="modal-close-button"
-                onClick={closeModal}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GrievanceModal grievance={selectedGrievance} onClose={closeModal} />
     </div>
   );
 }

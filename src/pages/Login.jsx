@@ -1,98 +1,117 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
-  FiFileText,
-  FiSearch,
-  FiMessageCircle,
-  FiUser,
-  FiLock,
+  FiCheck,
   FiEye,
   FiEyeOff,
-  FiCheck,
+  FiFileText,
+  FiLock,
+  FiMessageCircle,
+  FiSearch,
+  FiUser,
 } from "react-icons/fi";
 
-const USERS = [
-  {
-    userId: "esic_superadmin",
-    password: "ESIC@SuperAdmin2026",
-    role: "admin",
-  },
-  {
-    userId: "esic_officer",
-    password: "ESIC@Officer2026",
-    role: "officer",
-  },
-  {
-    userId: "esic_joka",
-    password: "ESIC@Joka2026",
-    role: "hospital",
-    hospitalName: "Joka Hospital",
-  },
-  {
-    userId: "esic_maniktala",
-    password: "ESIC@Maniktala2026",
-    role: "hospital",
-    hospitalName: "Maniktala Hospital",
-  },
-  {
-    userId: "esic_kamarhati",
-    password: "ESIC@Kamarhati2026",
-    role: "hospital",
-    hospitalName: "Kamarhati Hospital",
-  },
-];
+import { loginToWordPress, getCurrentUser } from "../lib/auth";
 
 function Feature({ icon: Icon, title, description }) {
   return (
     <div className="feature">
       <div className="feature-icon">
-        <Icon size={32} strokeWidth={2} />
+        <Icon size={22} />
       </div>
 
-      <div className="feature-title">{title}</div>
+      <div className="feature-content">
+        <h3>{title}</h3>
 
-      <div className="feature-description">{description}</div>
+        <p>{description}</p>
+      </div>
     </div>
   );
 }
 
 function Login() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(true);
 
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
 
     setError("");
 
-    const authenticatedUser = USERS.find(
-      (user) => user.userId === userId.trim() && user.password === password,
-    );
-
-    if (authenticatedUser) {
-      sessionStorage.setItem(
-        "esicUser",
-        JSON.stringify({
-          userId: authenticatedUser.userId,
-          role: authenticatedUser.role,
-          hospitalName: authenticatedUser.hospitalName || "",
-        }),
-      );
-      navigate("/hospital/dashboard");
+    if (!userId.trim() || !password) {
+      setError("Please enter your User ID and password.");
       return;
     }
 
-    setError("Invalid User ID or password. Please check your credentials.");
+    setLoading(true);
+
+    try {
+      /*
+       * Step 1
+       * Authenticate with WordPress.
+       */
+      const token = await loginToWordPress(userId.trim(), password);
+
+      /*
+       * Step 2
+       * Get the authenticated WordPress user.
+       */
+      const user = await getCurrentUser(token);
+
+      /*
+       * Step 3
+       * Get the first WordPress role.
+       */
+      const role = user.roles?.nodes?.[0];
+
+      /*
+       * Step 4
+       * Store the authenticated session.
+       */
+      sessionStorage.setItem("esicToken", token);
+
+      sessionStorage.setItem(
+        "esicUser",
+        JSON.stringify({
+          userId: user.username,
+          userDatabaseId: user.databaseId,
+          name: user.name,
+          role: role?.name || "",
+          roleDisplayName: role?.displayName || "",
+        }),
+      );
+
+      /*
+       * Step 5
+       * Redirect to the hospital dashboard.
+       *
+       * Proper role guards will be added later.
+       */
+      navigate("/hospital/dashboard", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setError(error?.message || "Unable to sign in. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="main">
+      {/* HERO */}
+
       <section className="hero">
         <div className="hero-content">
           <div className="hero-line" />
@@ -153,6 +172,8 @@ function Login() {
         </div>
       </section>
 
+      {/* LOGIN */}
+
       <section className="login-section">
         <div className="login-card">
           <div className="login-heading">
@@ -162,8 +183,10 @@ function Login() {
           </div>
 
           <form className="login-form" onSubmit={handleLogin}>
+            {/* USER ID */}
+
             <div className="form-group">
-              <label>
+              <label htmlFor="userId">
                 User ID
                 <span>*</span>
               </label>
@@ -174,18 +197,22 @@ function Login() {
                 </div>
 
                 <input
+                  id="userId"
                   type="text"
                   value={userId}
                   onChange={(event) => setUserId(event.target.value)}
                   placeholder="Enter your User ID or Insurance Number"
                   autoComplete="username"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
 
+            {/* PASSWORD */}
+
             <div className="form-group">
-              <label>
+              <label htmlFor="password">
                 Password
                 <span>*</span>
               </label>
@@ -196,31 +223,44 @@ function Login() {
                 </div>
 
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   required
+                  disabled={loading}
                 />
 
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={loading}
                 >
                   {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                 </button>
               </div>
             </div>
 
-            {error && <div className="login-error">{error}</div>}
+            {/* ERROR */}
+
+            {error && (
+              <div className="login-error" role="alert">
+                {error}
+              </div>
+            )}
+
+            {/* OPTIONS */}
 
             <div className="login-options">
               <button
                 type="button"
                 className="remember"
                 onClick={() => setRemember((value) => !value)}
+                disabled={loading}
               >
                 <span className={remember ? "checkbox checked" : "checkbox"}>
                   {remember && <FiCheck size={14} />}
@@ -229,13 +269,15 @@ function Login() {
                 <span>Remember me</span>
               </button>
 
-              <button type="button" className="forgot">
+              <button type="button" className="forgot" disabled={loading}>
                 Forgot Password?
               </button>
             </div>
 
-            <button className="login-button" type="submit">
-              Login
+            {/* SUBMIT */}
+
+            <button className="login-button" type="submit" disabled={loading}>
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
         </div>

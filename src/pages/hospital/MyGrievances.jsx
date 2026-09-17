@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import {
   FiSearch,
   FiChevronDown,
@@ -12,31 +13,23 @@ import {
   FiFileText,
 } from "react-icons/fi";
 
-import grievances from "../../data/grievances.json";
+import { getGrievances } from "../../lib/grievances";
+import GrievanceModal from "../../components/hospital/GrievanceModal";
 
 function getStatusClass(status) {
-  switch (status) {
-    case "Pending":
-      return "pending";
-
-    case "In Progress":
-      return "in-progress";
-
-    case "Resolved":
-      return "resolved";
-
-    case "Rejected":
-      return "rejected";
-
-    case "Delegated to ESIC":
-      return "delegated";
-
-    default:
-      return "";
+  if (!status) {
+    return "";
   }
+
+  return String(status).toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
 }
 
 function MyGrievances() {
+  const [grievances, setGrievances] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -49,6 +42,69 @@ function MyGrievances() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+
+  function formatDisplayDate(value) {
+    if (!value || value === "N/A") return "N/A";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  }
+
+  /*
+   * LOAD GRIEVANCES
+   */
+
+  useEffect(() => {
+    async function loadGrievances() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = sessionStorage.getItem("esicToken");
+
+        if (!token) {
+          throw new Error("Authentication session not found.");
+        }
+
+        const data = await getGrievances(token);
+
+        const formattedGrievances = data.map((grievance) => {
+          const details = grievance.grievanceDetails || {};
+
+          return {
+            id: grievance.databaseId,
+            tokenNo: details.tokenNumber || "N/A",
+            title: grievance.title || "Untitled Grievance",
+            submittedOn: formatDisplayDate(grievance.date),
+            lastUpdated: formatDisplayDate(grievance.modified),
+            status: grievance.statusLabel || "",
+            description: details.description || "",
+            image: grievance.currentImageUrl || null,
+            generatedImageUrl: grievance.generatedImageUrl || null,
+          };
+        });
+
+        setGrievances(formattedGrievances);
+      } catch (err) {
+        console.error("Failed to load grievances:", err);
+
+        setError(err.message || "Unable to load grievances. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGrievances();
+  }, []);
 
   /*
    * FILTER + SEARCH + SORT
@@ -64,8 +120,8 @@ function MyGrievances() {
 
       result = result.filter(
         (grievance) =>
-          grievance.tokenNo.toLowerCase().includes(searchValue) ||
-          grievance.title.toLowerCase().includes(searchValue),
+          String(grievance.tokenNo).toLowerCase().includes(searchValue) ||
+          String(grievance.title).toLowerCase().includes(searchValue),
       );
     }
 
@@ -87,9 +143,12 @@ function MyGrievances() {
       ) {
         valueA = new Date(valueA);
         valueB = new Date(valueB);
+
+        if (Number.isNaN(valueA.getTime())) valueA = new Date(0);
+        if (Number.isNaN(valueB.getTime())) valueB = new Date(0);
       } else {
-        valueA = String(valueA).toLowerCase();
-        valueB = String(valueB).toLowerCase();
+        valueA = String(valueA ?? "").toLowerCase();
+        valueB = String(valueB ?? "").toLowerCase();
       }
 
       if (valueA < valueB) {
@@ -104,7 +163,7 @@ function MyGrievances() {
     });
 
     return result;
-  }, [search, statusFilter, sortConfig]);
+  }, [grievances, search, statusFilter, sortConfig]);
 
   /*
    * PAGINATION
@@ -366,9 +425,33 @@ function MyGrievances() {
             </thead>
 
             <tbody>
-              {paginatedGrievances.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="empty-grievances">
+                    <div className="empty-icon">
+                      <FiFileText size={24} />
+                    </div>
+
+                    <h3>Loading grievances...</h3>
+
+                    <p>Fetching the latest grievance records.</p>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="6" className="empty-grievances">
+                    <div className="empty-icon">
+                      <FiFileText size={24} />
+                    </div>
+
+                    <h3>Unable to load grievances</h3>
+
+                    <p>{error}</p>
+                  </td>
+                </tr>
+              ) : paginatedGrievances.length > 0 ? (
                 paginatedGrievances.map((grievance) => (
-                  <tr key={grievance.tokenNo}>
+                  <tr key={grievance.id}>
                     <td className="token-cell">{grievance.tokenNo}</td>
 
                     <td className="title-cell">{grievance.title}</td>
@@ -476,98 +559,10 @@ function MyGrievances() {
 
       {/* VIEW MODAL */}
 
-      {selectedGrievance && (
-        <div
-          className="grievance-modal-overlay"
-          onClick={() => setSelectedGrievance(null)}
-        >
-          <div
-            className="grievance-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="grievance-modal-header">
-              <div>
-                <div className="modal-eyebrow">GRIEVANCE DETAILS</div>
-
-                <h2>{selectedGrievance.title}</h2>
-
-                <div className="modal-token">{selectedGrievance.tokenNo}</div>
-              </div>
-
-              <button
-                type="button"
-                className="modal-close"
-                onClick={() => setSelectedGrievance(null)}
-              >
-                <FiX size={21} />
-              </button>
-            </div>
-
-            <div className="grievance-modal-body">
-              <div className="modal-status-row">
-                <span className="modal-label">Status</span>
-
-                <span
-                  className={`status ${getStatusClass(
-                    selectedGrievance.status,
-                  )}`}
-                >
-                  {selectedGrievance.status}
-                </span>
-              </div>
-
-              <div className="modal-details">
-                <div className="modal-detail">
-                  <span className="modal-label">Token Number</span>
-
-                  <strong>{selectedGrievance.tokenNo}</strong>
-                </div>
-
-                <div className="modal-detail">
-                  <span className="modal-label">Submitted On</span>
-
-                  <strong>{selectedGrievance.submittedOn}</strong>
-                </div>
-
-                <div className="modal-detail">
-                  <span className="modal-label">Last Updated</span>
-
-                  <strong>{selectedGrievance.lastUpdated}</strong>
-                </div>
-              </div>
-
-              <div className="modal-description">
-                <span className="modal-label">Description</span>
-
-                <p>{selectedGrievance.description}</p>
-              </div>
-
-              {selectedGrievance.image && (
-                <div className="modal-evidence">
-                  <span className="modal-label">Evidence</span>
-
-                  <div className="modal-image-wrapper">
-                    <img
-                      src={selectedGrievance.image}
-                      alt={selectedGrievance.title}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="grievance-modal-footer">
-              <button
-                type="button"
-                className="modal-close-button"
-                onClick={() => setSelectedGrievance(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GrievanceModal
+        grievance={selectedGrievance}
+        onClose={() => setSelectedGrievance(null)}
+      />
     </div>
   );
 }
