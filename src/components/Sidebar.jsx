@@ -22,7 +22,7 @@ function Sidebar({
         </div>
 
         <div className="sidebar-brand-text">
-          <div className="sidebar-brand-title">ESIC</div>
+          <div className="sidebar-brand-title">ESI(MB)</div>
 
           <div className="sidebar-brand-subtitle">Grievance Portal</div>
 
