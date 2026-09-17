@@ -45,7 +45,7 @@ function HospitalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const currentUser = JSON.parse(sessionStorage.getItem("esicUser"));
-  const hospitalName = currentUser.hospitalName || "ESIC User";
+  const hospitalName = currentUser.name || "ESIC User";
 
   const activeItems = {
     "/hospital/dashboard": "Dashboard",
