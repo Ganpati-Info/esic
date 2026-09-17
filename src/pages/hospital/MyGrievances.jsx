@@ -335,11 +335,11 @@ function MyGrievances() {
           <div className="status-filter">
             <select value={statusFilter} onChange={handleStatusFilter}>
               <option value="All">All Statuses</option>
-              <option value="Pending">Pending</option>
+              <option value="Sent to Director">Sent to Director</option>
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
               <option value="Rejected">Rejected</option>
-              <option value="Delegated to ESIC">Delegated to ESIC</option>
+              <option value="Sent to ESIC">Sent to ESIC</option>
             </select>
 
             <FiChevronDown size={16} />

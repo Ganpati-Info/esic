@@ -5,6 +5,20 @@ import { RiSparkling2Fill } from "react-icons/ri";
 import { createGrievance } from "../../lib/grievances";
 import { uploadMedia } from "../../lib/media";
 
+async function dataUrlToFile(dataUrl, filename = "ai-reference.png") {
+  const response = await fetch(dataUrl);
+
+  if (!response.ok) {
+    throw new Error("Unable to prepare the generated image.");
+  }
+
+  const blob = await response.blob();
+
+  return new File([blob], filename, {
+    type: blob.type || "image/png",
+  });
+}
+
 function CreateGrievance() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -21,15 +35,21 @@ function CreateGrievance() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasGeneratedImage, setHasGeneratedImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState("");
+
+  // WordPress media records
+  const [currentMedia, setCurrentMedia] = useState(null);
+  const [generatedMedia, setGeneratedMedia] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const MAX_FILE_SIZE = 2 * 1024 * 1024;
+  const MAX_FILE_SIZE = 3 * 1024 * 1024;
 
   const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
 
   const handleFile = (file) => {
     setError("");
+    setSubmitError("");
 
     if (!file) {
       return;
@@ -41,9 +61,16 @@ function CreateGrievance() {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError("Image size must be less than 2 MB.");
+      setError("Image size must be less than 3 MB.");
       return;
     }
+
+    // If a new image is selected, previous WordPress media
+    // and generated image are no longer valid.
+    setCurrentMedia(null);
+    setGeneratedMedia(null);
+    setGeneratedImage("");
+    setHasGeneratedImage(false);
 
     setImage(file);
 
@@ -82,83 +109,256 @@ function CreateGrievance() {
     setImage(null);
     setImagePreview("");
     setError("");
+
+    // Clear WordPress media references
+    setCurrentMedia(null);
+    setGeneratedMedia(null);
+
+    // Clear AI result
+    setGeneratedImage("");
+    setHasGeneratedImage(false);
   };
 
-  const handleGenerateAI = () => {
-    setIsGenerating(true);
+  const handleGenerateAI = async () => {
+    setSubmitError("");
 
-    // Keep the predefined-prompt integration point until the image API is connected.
-    setTimeout(() => {
-      setHasGeneratedImage(true);
-      setIsGenerating(false);
-    }, 800);
-  };
-
-const handleSubmit = async (event) => {
-  event.preventDefault();
-
-  setError("");
-  setSubmitError("");
-
-  if (!title.trim()) {
-    setSubmitError("Please enter a grievance title.");
-    return;
-  }
-
-  if (!description.trim()) {
-    setSubmitError("Please enter a grievance description.");
-    return;
-  }
-
-  if (!image) {
-    setSubmitError("Please upload an evidence image.");
-    return;
-  }
-
-  try {
-    setIsSubmitting(true);
-
-    const token = sessionStorage.getItem("esicToken");
-
-    if (!token) {
-      throw new Error("Authentication session not found. Please log in again.");
+    if (!title.trim()) {
+      setSubmitError("Please enter a grievance title first.");
+      return;
     }
 
-    /*
-     * STEP 1
-     * Upload current evidence image to WordPress Media Library
-     */
-    const uploadedMedia = await uploadMedia(token, image);
+    if (!description.trim()) {
+      setSubmitError("Please enter a grievance description first.");
+      return;
+    }
 
-    console.log("UPLOADED MEDIA:", uploadedMedia);
+    if (!image) {
+      setSubmitError("Please upload an evidence image first.");
+      return;
+    }
 
-    /*
-     * STEP 2
-     * Create the grievance using the attachment ID
-     */
-    const grievance = await createGrievance(token, {
-      title: title.trim(),
-      description: description.trim(),
-      currentImageId: uploadedMedia.id,
-    });
+    try {
+      setIsGenerating(true);
+      setHasGeneratedImage(false);
+      setGeneratedImage("");
+      setGeneratedMedia(null);
 
-    console.log("CREATED GRIEVANCE:", grievance);
+      const token = sessionStorage.getItem("esicToken");
 
-    /*
-     * STEP 3
-     * Go back to grievance list
-     */
-    navigate("/hospital/grievances");
-  } catch (error) {
-    console.error("CREATE GRIEVANCE ERROR:", error);
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
 
-    setSubmitError(
-      error.message || "Unable to submit grievance. Please try again.",
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      /*
+       * STEP 1
+       * Upload current evidence image to WordPress.
+       *
+       * If it was already uploaded during a previous
+       * generation attempt, reuse the existing media.
+       */
+      let uploadedMedia = currentMedia;
+
+      if (!uploadedMedia) {
+        uploadedMedia = await uploadMedia(token, image);
+
+        console.log("CURRENT MEDIA UPLOAD:", uploadedMedia);
+
+        setCurrentMedia(uploadedMedia);
+      } else {
+        console.log("REUSING CURRENT MEDIA:", uploadedMedia);
+      }
+
+      /*
+       * STEP 2
+       * Send title, description and WordPress image URL
+       * to the AI image generation service.
+       */
+      const aiResponse = await fetch(
+        "https://esicimagegen.vercel.app/api/generate-reference",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim(),
+            imageUrl: uploadedMedia.url,
+          }),
+        },
+      );
+
+      let aiData;
+
+      try {
+        aiData = await aiResponse.json();
+      } catch {
+        throw new Error("Unable to read the AI service response.");
+      }
+
+      console.log("AI SERVICE STATUS:", aiResponse.status);
+
+      console.log("AI SERVICE RESPONSE:", aiData);
+
+      if (!aiResponse.ok) {
+        throw new Error(
+          aiData?.error || "Unable to generate AI reference image.",
+        );
+      }
+
+      if (!aiData?.generatedImage) {
+        throw new Error(
+          "AI service completed the request but did not return an image.",
+        );
+      }
+
+      /*
+       * STEP 3
+       * Convert the AI data URL into a File.
+       */
+      const generatedFile = await dataUrlToFile(
+        aiData.generatedImage,
+        `ai-reference-${Date.now()}.png`,
+      );
+
+      /*
+       * STEP 4
+       * Upload the generated AI image to WordPress.
+       */
+      const generatedMediaUpload = await uploadMedia(token, generatedFile);
+
+      console.log("GENERATED MEDIA UPLOAD:", generatedMediaUpload);
+
+      /*
+       * STEP 5
+       * Store generated WordPress media record.
+       *
+       * This ID will later be passed to createGrievance().
+       */
+      setGeneratedMedia(generatedMediaUpload);
+
+      /*
+       * STEP 6
+       * Show the generated image in the UI.
+       */
+      setGeneratedImage(aiData.generatedImage);
+      setHasGeneratedImage(true);
+
+      console.log("AI REFERENCE READY:", {
+        currentImageId: uploadedMedia.id,
+        generatedImageId: generatedMediaUpload.id,
+      });
+    } catch (error) {
+      console.error("AI REFERENCE GENERATION ERROR:", error);
+
+      setHasGeneratedImage(false);
+      setGeneratedImage("");
+      setGeneratedMedia(null);
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Unable to generate AI reference image.",
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setError("");
+    setSubmitError("");
+
+    if (!title.trim()) {
+      setSubmitError("Please enter a grievance title.");
+      return;
+    }
+
+    if (!description.trim()) {
+      setSubmitError("Please enter a grievance description.");
+      return;
+    }
+
+    if (!image) {
+      setSubmitError("Please upload an evidence image.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const token = sessionStorage.getItem("esicToken");
+
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
+
+      /*
+       * STEP 1
+       * Make sure the current evidence image exists
+       * in WordPress.
+       *
+       * If AI generation already uploaded it, reuse it.
+       * Otherwise upload it now.
+       */
+      let uploadedMedia = currentMedia;
+
+      if (!uploadedMedia) {
+        uploadedMedia = await uploadMedia(token, image);
+
+        console.log("CURRENT MEDIA UPLOAD:", uploadedMedia);
+
+        setCurrentMedia(uploadedMedia);
+      } else {
+        console.log("REUSING CURRENT MEDIA:", uploadedMedia);
+      }
+
+      /*
+       * STEP 2
+       * Create the grievance.
+       *
+       * currentImageId = original evidence image
+       * generatedImageId = AI repaired-condition image
+       */
+      const grievance = await createGrievance(token, {
+        title: title.trim(),
+        description: description.trim(),
+
+        currentImageId: uploadedMedia.id,
+
+        generatedImageId: generatedMedia?.id || null,
+      });
+
+      console.log("CREATED GRIEVANCE:", grievance);
+
+      console.log("IMAGE IDS SAVED:", {
+        currentImageId: uploadedMedia.id,
+        generatedImageId: generatedMedia?.id || null,
+      });
+
+      /*
+       * STEP 3
+       * Go back to grievance list.
+       */
+      navigate("/hospital/grievances");
+    } catch (error) {
+      console.error("CREATE GRIEVANCE ERROR:", error);
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit grievance. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="create-grievance-page">
@@ -273,7 +473,7 @@ const handleSubmit = async (event) => {
                   </button>
 
                   <div className="upload-info">
-                    JPG, JPEG or PNG • Maximum 2 MB
+                    JPG, JPEG or PNG • Maximum 3 MB
                   </div>
                 </div>
               ) : (
@@ -286,7 +486,7 @@ const handleSubmit = async (event) => {
                     <div className="uploaded-image-name">{image?.name}</div>
 
                     <div className="uploaded-image-size">
-                      {(image?.size / 1024 / 1024).toFixed(2)} MB
+                      {(image?.size / 1024 / 1024).toFixed(3)} MB
                     </div>
                   </div>
 
@@ -329,10 +529,13 @@ const handleSubmit = async (event) => {
           <div className="form-card-body">
             <button
               type="button"
-              className="generate-ai-button"
+              className={`generate-ai-button ${isGenerating ? "disabled" : ""}`}
               onClick={handleGenerateAI}
               disabled={isGenerating}
+              aria-busy={isGenerating}
             >
+              <RiSparkling2Fill size={16} />
+
               {isGenerating ? "Generating..." : "Generate Reference Image"}
             </button>
 
@@ -347,31 +550,47 @@ const handleSubmit = async (event) => {
                       : "The generated image will appear here."}
                   </p>
                 </div>
-
-                <span className="ai-generated-badge">AI Reference</span>
               </div>
 
-              <div className="ai-image-wrapper ai-image-placeholder">
-                <RiSparkling2Fill size={30} />
-                <span>
-                  {hasGeneratedImage
-                    ? "Generated image preview"
-                    : "Generate an image to preview it here"}
-                </span>
+              <div className="ai-image-wrapper">
+                {generatedImage ? (
+                  <img
+                    src={generatedImage}
+                    alt="AI generated repaired condition reference"
+                    className="ai-generated-image"
+                  />
+                ) : (
+                  <div className="ai-image-placeholder">
+                    <RiSparkling2Fill size={30} />
+
+                    <span>
+                      {isGenerating
+                        ? "Generating repaired-condition reference..."
+                        : "Generate an image to preview it here"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* SUBMIT */}
+        {/* SUBMIT ERROR */}
 
         {submitError && <div className="submit-error">{submitError}</div>}
 
+        {/* SUBMIT */}
+
         <div className="create-form-actions">
-          <button type="button" className="cancel-button">
+          <button
+            type="button"
+            className="cancel-button"
+            onClick={() => navigate("/hospital/grievances")}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
-          {submitError && <div className="submit-error">{submitError}</div>}
+
           <button
             type="submit"
             className="submit-grievance-button"

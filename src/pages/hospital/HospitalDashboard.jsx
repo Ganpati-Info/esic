@@ -108,7 +108,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
   const totalGrievances = grievances.length;
 
   const pendingCount = grievances.filter(
-    (grievance) => grievance.status === "Pending",
+    (grievance) => grievance.status === "Sent to Director",
   ).length;
 
   const resolvedCount = grievances.filter(
@@ -120,7 +120,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
   ).length;
 
   const delegatedCount = grievances.filter(
-    (grievance) => grievance.status === "Delegated to ESIC",
+    (grievance) => grievance.status === "Sent to ESIC",
   ).length;
 
   const closeModal = () => {
@@ -164,7 +164,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
         <StatCard
           icon={FiClock}
-          title="Pending"
+          title="Sent to Director"
           value={loading ? "—" : pendingCount}
           type="pending"
         />
@@ -185,7 +185,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
         <StatCard
           icon={FiUsers}
-          title="Delegated to ESIC"
+          title="Sent to ESIC"
           value={loading ? "—" : delegatedCount}
           type="delegated"
         />
