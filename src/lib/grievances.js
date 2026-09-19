@@ -1,7 +1,8 @@
+import { authenticatedFetch } from "./auth";
 const WP_BASE_URL = "https://esic.ganpatiinfosolutions.com";
 
 export async function getGrievances(token) {
-  const response = await fetch(`${WP_BASE_URL}/graphql`, {
+  const response = await authenticatedFetch(`${WP_BASE_URL}/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,6 +20,12 @@ export async function getGrievances(token) {
       date
       modified
 
+      creator {
+        userId
+        username
+        name
+      }
+
       grievanceDetails {
         tokenNumber
         description
@@ -28,6 +35,7 @@ export async function getGrievances(token) {
       statusLabel
       currentImageUrl
       generatedImageUrl
+      rejectionRemark
     }
   }
 }
@@ -90,6 +98,7 @@ export async function createGrievance(
           }
 
           statusLabel
+          rejectionRemark
           currentImageUrl
           generatedImageUrl
         }
@@ -114,7 +123,7 @@ export async function createGrievance(
     input.generatedImageId = Number(generatedImageId);
   }
 
-  const response = await fetch(`${WP_BASE_URL}/graphql`, {
+  const response = await authenticatedFetch(`${WP_BASE_URL}/graphql`, {
     method: "POST",
 
     headers: {
@@ -153,6 +162,112 @@ export async function createGrievance(
 
   if (!grievance) {
     throw new Error("Grievance was not created.");
+  }
+
+  return grievance;
+}
+
+export async function updateGrievanceStatus(
+  token,
+  { grievanceId, status, rejectionRemark = "" },
+) {
+  if (!token) {
+    throw new Error("Authentication session not found.");
+  }
+
+  if (!grievanceId) {
+    throw new Error("Grievance ID is required.");
+  }
+
+  if (!status) {
+    throw new Error("Grievance status is required.");
+  }
+
+  /*
+   * WPGraphQL uses the global node ID.
+   * Your current IDs follow:
+   * post:185 -> cG9zdDoxODU=
+   */
+  const numericId = Number(grievanceId);
+
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  const graphqlId = window.btoa(`post:${numericId}`);
+
+  const mutation = `
+    mutation UpdateGrievance($input: UpdateGrievanceInput!) {
+      updateGrievance(input: $input) {
+        grievance {
+          databaseId
+          modified
+          grievanceDetails {
+            status
+          }
+          statusLabel
+          rejectionRemark
+        }
+      }
+    }
+  `;
+
+  const input = {
+    clientMutationId: `status-update-${numericId}-${Date.now()}`,
+    id: graphqlId,
+    grievanceStatus: status,
+  };
+
+  if (status === "rejected") {
+    const trimmedRemark = rejectionRemark.trim();
+
+    if (!trimmedRemark) {
+      throw new Error(
+        "A rejection remark is required when rejecting a grievance.",
+      );
+    }
+
+    input.rejectionRemark = trimmedRemark;
+  }
+
+  const response = await fetch("https://esic.ganpatiinfosolutions.com/graphql", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      query: mutation,
+      variables: {
+        input,
+      },
+    }),
+  });
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the status update response.");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message || "Unable to update grievance status.",
+    );
+  }
+
+  if (result?.errors?.length) {
+    throw new Error(
+      result.errors[0]?.message || "Unable to update grievance status.",
+    );
+  }
+
+  const grievance = result?.data?.updateGrievance?.grievance;
+
+  if (!grievance) {
+    throw new Error("Grievance status was not updated.");
   }
 
   return grievance;

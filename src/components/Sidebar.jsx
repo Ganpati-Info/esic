@@ -11,7 +11,10 @@ function Sidebar({
   activeItem = "Dashboard",
   onNavigate,
   hospitalName = "ESIC User",
+  mode = "hospital",
 }) {
+  const isAdmin = mode === "admin";
+
   return (
     <aside className="hospital-sidebar">
       {/* BRAND */}
@@ -37,6 +40,8 @@ function Sidebar({
       {/* NAVIGATION */}
 
       <nav className="sidebar-navigation">
+        {/* DASHBOARD */}
+
         <button
           type="button"
           className={
@@ -49,43 +54,67 @@ function Sidebar({
           <span>Dashboard</span>
         </button>
 
+        {/* GRIEVANCES */}
+
         <div className="sidebar-section">
           <div className="sidebar-section-title">
             Grievances
             <FiChevronDown size={17} />
           </div>
 
-          <button
-            type="button"
-            className={
-              activeItem === "Create Grievance"
-                ? "sidebar-subitem active"
-                : "sidebar-subitem"
-            }
-            onClick={() => onNavigate?.("Create Grievance")}
-          >
-            <FiPlusCircle size={19} />
+          {isAdmin ? (
+            /* ADMIN / DIRECTOR */
 
-            <span>Create Grievance</span>
-          </button>
+            <button
+              type="button"
+              className={
+                activeItem === "All Grievances"
+                  ? "sidebar-subitem active"
+                  : "sidebar-subitem"
+              }
+              onClick={() => onNavigate?.("All Grievances")}
+            >
+              <FiFileText size={19} />
 
-          <button
-            type="button"
-            className={
-              activeItem === "My Grievances"
-                ? "sidebar-subitem active"
-                : "sidebar-subitem"
-            }
-            onClick={() => onNavigate?.("My Grievances")}
-          >
-            <FiFileText size={19} />
+              <span>All Grievances</span>
+            </button>
+          ) : (
+            /* HOSPITAL */
 
-            <span>My Grievances</span>
-          </button>
+            <>
+              <button
+                type="button"
+                className={
+                  activeItem === "Create Grievance"
+                    ? "sidebar-subitem active"
+                    : "sidebar-subitem"
+                }
+                onClick={() => onNavigate?.("Create Grievance")}
+              >
+                <FiPlusCircle size={19} />
+
+                <span>Create Grievance</span>
+              </button>
+
+              <button
+                type="button"
+                className={
+                  activeItem === "My Grievances"
+                    ? "sidebar-subitem active"
+                    : "sidebar-subitem"
+                }
+                onClick={() => onNavigate?.("My Grievances")}
+              >
+                <FiFileText size={19} />
+
+                <span>My Grievances</span>
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
-      {/* HOSPITAL CARD */}
+      {/* BOTTOM USER CARD */}
 
       <div className="sidebar-bottom">
         <div className="hospital-info-card">
@@ -94,9 +123,13 @@ function Sidebar({
           </div>
 
           <div className="hospital-info">
-            <div className="hospital-name">{hospitalName}</div>
+            <div className="hospital-name">
+              {isAdmin ? "Director" : hospitalName}
+            </div>
 
-            <div className="hospital-location">Kolkata, West Bengal</div>
+            <div className="hospital-location">
+              {isAdmin ? "ESIC (MB)" : "Kolkata, West Bengal"}
+            </div>
           </div>
         </div>
 

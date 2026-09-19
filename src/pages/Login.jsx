@@ -37,9 +37,11 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
+
   const [remember, setRemember] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
   const handleLogin = async (event) => {
@@ -49,6 +51,7 @@ function Login() {
 
     if (!userId.trim() || !password) {
       setError("Please enter your User ID and password.");
+
       return;
     }
 
@@ -56,26 +59,35 @@ function Login() {
 
     try {
       /*
-       * Step 1
+       * STEP 1
        * Authenticate with WordPress.
        */
       const token = await loginToWordPress(userId.trim(), password);
 
       /*
-       * Step 2
-       * Get the authenticated WordPress user.
+       * STEP 2
+       * Get authenticated WordPress user.
        */
       const user = await getCurrentUser(token);
 
       /*
-       * Step 3
+       * STEP 3
        * Get the first WordPress role.
        */
       const role = user.roles?.nodes?.[0];
 
+      const userRole = role?.name || "";
+
       /*
-       * Step 4
-       * Store the authenticated session.
+       * Debug information.
+       */
+      console.log("AUTHENTICATED USER ROLE:", userRole);
+
+      console.log("AUTHENTICATED USER:", user);
+
+      /*
+       * STEP 4
+       * Store authenticated session.
        */
       sessionStorage.setItem("esicToken", token);
 
@@ -85,20 +97,42 @@ function Login() {
           userId: user.username,
           userDatabaseId: user.databaseId,
           name: user.name,
-          role: role?.name || "",
+          role: userRole,
           roleDisplayName: role?.displayName || "",
         }),
       );
 
       /*
-       * Step 5
-       * Redirect to the hospital dashboard.
-       *
-       * Proper role guards will be added later.
+       * STEP 5
+       * Redirect based on WordPress role.
        */
-      navigate("/hospital/dashboard", {
-        replace: true,
-      });
+
+      if (userRole === "portal_super_admin") {
+        navigate("/admin/dashboard", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (userRole === "hospital_user") {
+        navigate("/hospital/dashboard", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      /*
+       * Unknown / unsupported role.
+       */
+      sessionStorage.removeItem("esicToken");
+
+      sessionStorage.removeItem("esicUser");
+
+      throw new Error(
+        `Your account role "${userRole}" is not configured for this portal.`,
+      );
     } catch (error) {
       console.error("Login error:", error);
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   FiFileText,
@@ -6,12 +6,12 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiUsers,
-  FiPlus,
   FiArrowRight,
   FiInbox,
 } from "react-icons/fi";
 
 import { Link } from "react-router-dom";
+
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
 
@@ -71,7 +71,9 @@ function getStatusClass(status) {
 }
 
 function formatDisplayDate(value) {
-  if (!value || value === "N/A") return "N/A";
+  if (!value || value === "N/A") {
+    return "N/A";
+  }
 
   const date = new Date(value);
 
@@ -86,12 +88,58 @@ function formatDisplayDate(value) {
   }).format(date);
 }
 
-function HospitalDashboard({ hospitalName = "ESIC User" }) {
+function AdminDashboard() {
   const [grievances, setGrievances] = useState([]);
+
   const [selectedGrievance, setSelectedGrievance] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
+
+  const handleStatusUpdate = ({
+    grievanceId,
+    statusLabel,
+    rejectionRemark,
+    modified,
+  }) => {
+    setGrievances((currentGrievances) =>
+      currentGrievances.map((grievance) => {
+        if (grievance.id !== grievanceId) {
+          return grievance;
+        }
+
+        return {
+          ...grievance,
+          status: statusLabel || grievance.status,
+          rejectionRemark: rejectionRemark || grievance.rejectionRemark || "",
+          lastUpdated: modified
+            ? formatDisplayDate(modified)
+            : grievance.lastUpdated,
+        };
+      }),
+    );
+
+    setSelectedGrievance((currentGrievance) => {
+      if (!currentGrievance) {
+        return currentGrievance;
+      }
+
+      if (currentGrievance.id !== grievanceId) {
+        return currentGrievance;
+      }
+
+      return {
+        ...currentGrievance,
+        status: statusLabel || currentGrievance.status,
+        rejectionRemark:
+          rejectionRemark || currentGrievance.rejectionRemark || "",
+        lastUpdated: modified
+          ? formatDisplayDate(modified)
+          : currentGrievance.lastUpdated,
+      };
+    });
+  };
 
   useEffect(() => {
     async function loadGrievances() {
@@ -112,21 +160,32 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
           return {
             id: grievance.databaseId,
+
             tokenNo: details.tokenNumber || "N/A",
+
             title: grievance.title || "Untitled Grievance",
+
+            hospital: grievance.creator?.name || "Unknown Hospital",
+
             submittedOn: formatDisplayDate(grievance.date),
+
             lastUpdated: formatDisplayDate(grievance.modified),
+
             status: normalizeStatus(grievance.statusLabel || ""),
+
             description: details.description || "",
+
             image: grievance.currentImageUrl || null,
+
             generatedImageUrl: grievance.generatedImageUrl || null,
+
             rejectionRemark: grievance.rejectionRemark || "",
           };
         });
 
         setGrievances(formattedGrievances);
       } catch (err) {
-        console.error("Failed to load grievances:", err);
+        console.error("Failed to load admin grievances:", err);
 
         setError(err.message || "Unable to load grievances. Please try again.");
       } finally {
@@ -139,8 +198,12 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
   const totalGrievances = grievances.length;
 
-  const pendingCount = grievances.filter(
+  const sentToDirectorCount = grievances.filter(
     (grievance) => grievance.status === "Sent to Director",
+  ).length;
+
+  const inProgressCount = grievances.filter(
+    (grievance) => grievance.status === "In Progress",
   ).length;
 
   const resolvedCount = grievances.filter(
@@ -151,41 +214,28 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
     (grievance) => grievance.status === "Rejected",
   ).length;
 
-  const inProgressCount = grievances.filter(
-    (grievance) => grievance.status === "In Progress",
-  ).length;
-
   const sentToEsicCount = grievances.filter(
     (grievance) => grievance.status === "Sent to ESIC",
   ).length;
 
-  const closeModal = () => {
-    setSelectedGrievance(null);
-  };
+  const recentGrievances = useMemo(() => {
+    return [...grievances]
+      .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+      .slice(0, 5);
+  }, [grievances]);
 
   return (
     <div className="hospital-dashboard">
-      {/* DASHBOARD HEADER */}
+      {/* PAGE HEADER */}
 
       <div className="dashboard-title">
         <div className="dashboard-title-content">
-          <div className="dashboard-eyebrow">HOSPITAL MODULE</div>
+          <div className="dashboard-eyebrow">DIRECTOR MODULE</div>
 
-          <h1>{hospitalName}</h1>
+          <h1>Grievance Dashboard</h1>
 
-          <p>
-            Manage and track hospital infrastructure and facility grievances.
-          </p>
+          <p>Monitor and manage grievances submitted by hospitals.</p>
         </div>
-
-        <Link
-          to="/hospital/grievances/create"
-          className="create-grievance-button"
-        >
-          <FiPlus size={21} />
-
-          <span>Create Grievance</span>
-        </Link>
       </div>
 
       {/* STATISTICS */}
@@ -201,8 +251,15 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         <StatCard
           icon={FiClock}
           title="Sent to Director"
-          value={loading ? "—" : pendingCount}
+          value={loading ? "—" : sentToDirectorCount}
           type="pending"
+        />
+
+        <StatCard
+          icon={FiUsers}
+          title="In Progress"
+          value={loading ? "—" : inProgressCount}
+          type="in-progress"
         />
 
         <StatCard
@@ -218,14 +275,10 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
           value={loading ? "—" : rejectedCount}
           type="rejected"
         />
-
-        <StatCard
-          icon={FiUsers}
-          title="In Progress"
-          value={loading ? "—" : inProgressCount}
-          type="in-progress"
-        />
       </div>
+
+      {/* SENT TO ESIC SUMMARY */}
+
       <div
         className="director-esic-summary"
         style={{
@@ -248,7 +301,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         <div className="section-header">
           <h2>Recent Grievances</h2>
 
-          <Link to="/hospital/grievances" className="view-all">
+          <Link to="/admin/grievances" className="view-all">
             <span>View All</span>
 
             <FiArrowRight size={17} />
@@ -260,10 +313,15 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
             <thead>
               <tr>
                 <th>Token No.</th>
+
+                <th>Hospital</th>
+
                 <th>Title</th>
+
                 <th>Submitted On</th>
-                <th>Last Updated</th>
+
                 <th>Status</th>
+
                 <th>Action</th>
               </tr>
             </thead>
@@ -281,7 +339,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
                     {error}
                   </td>
                 </tr>
-              ) : grievances.length === 0 ? (
+              ) : recentGrievances.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="table-message">
                     <div className="empty-grievances">
@@ -292,23 +350,21 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
                       <div className="empty-grievances-copy">
                         <strong>No grievances yet</strong>
 
-                        <span>
-                          Submit your first grievance to start tracking it here.
-                        </span>
+                        <span>Hospital grievances will appear here.</span>
                       </div>
                     </div>
                   </td>
                 </tr>
               ) : (
-                grievances.slice(0, 5).map((grievance) => (
+                recentGrievances.map((grievance) => (
                   <tr key={grievance.id}>
                     <td>{grievance.tokenNo}</td>
+
+                    <td>{grievance.hospital}</td>
 
                     <td className="grievance-title-cell">{grievance.title}</td>
 
                     <td>{grievance.submittedOn}</td>
-
-                    <td>{grievance.lastUpdated}</td>
 
                     <td>
                       <span
@@ -335,11 +391,15 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         </div>
       </section>
 
-      {/* GRIEVANCE MODAL */}
+      {/* VIEW MODAL */}
 
-      <GrievanceModal grievance={selectedGrievance} onClose={closeModal} />
+      <GrievanceModal
+        grievance={selectedGrievance}
+        onClose={() => setSelectedGrievance(null)}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }
 
-export default HospitalDashboard;
+export default AdminDashboard;

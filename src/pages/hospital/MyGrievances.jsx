@@ -16,12 +16,43 @@ import {
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
 
+function normalizeStatus(status) {
+  const value = String(status || "")
+    .trim()
+    .toLowerCase();
+
+  switch (value) {
+    case "pending":
+    case "sent to director":
+      return "Sent to Director";
+
+    case "in progress":
+      return "In Progress";
+
+    case "resolved":
+      return "Resolved";
+
+    case "rejected":
+      return "Rejected";
+
+    case "sent to esic":
+    case "delegated to esic":
+      return "Sent to ESIC";
+
+    default:
+      return String(status || "").trim();
+  }
+}
+
 function getStatusClass(status) {
   if (!status) {
     return "";
   }
 
-  return String(status).toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
+  return normalizeStatus(status)
+    .toLowerCase()
+    .replace(/_/g, "-")
+    .replace(/\s+/g, "-");
 }
 
 function MyGrievances() {
@@ -42,6 +73,7 @@ function MyGrievances() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+
 
   function formatDisplayDate(value) {
     if (!value || value === "N/A") return "N/A";
@@ -86,10 +118,12 @@ function MyGrievances() {
             title: grievance.title || "Untitled Grievance",
             submittedOn: formatDisplayDate(grievance.date),
             lastUpdated: formatDisplayDate(grievance.modified),
-            status: grievance.statusLabel || "",
+            status: normalizeStatus(grievance.statusLabel || ""),
             description: details.description || "",
             image: grievance.currentImageUrl || null,
             generatedImageUrl: grievance.generatedImageUrl || null,
+            rejectionRemark: grievance.rejectionRemark || "",
+            hospitalName: grievance.creator?.username || "N/A",
           };
         });
 
