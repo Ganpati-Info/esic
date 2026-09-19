@@ -1,13 +1,23 @@
-import { FiSearch, FiUser } from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 
-function HospitalHeader({ hospitalName = "ESIC User" }) {
+function HospitalHeader({
+  hospitalName = "ESIC User",
+  userRole = "Hospital User",
+}) {
   return (
     <header className="hospital-header">
-      <div className="hospital-search">
+      {/* <div className="hospital-search">
         <FiSearch size={21} />
 
-        <input type="text" placeholder="Search by token, title or status..." />
-      </div>
+        <input
+          type="text"
+          placeholder={
+            userRole === "Director"
+              ? "Search by token, title or hospital..."
+              : "Search by token, title or status..."
+          }
+        />
+      </div> */}
 
       <div className="hospital-header-right">
         <div className="hospital-user">
@@ -18,7 +28,7 @@ function HospitalHeader({ hospitalName = "ESIC User" }) {
           <div className="hospital-user-info">
             <div className="hospital-user-name">{hospitalName}</div>
 
-            <div className="hospital-user-role">Hospital User</div>
+            <div className="hospital-user-role">{userRole}</div>
           </div>
         </div>
       </div>

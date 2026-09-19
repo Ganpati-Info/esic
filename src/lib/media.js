@@ -1,3 +1,4 @@
+import { authenticatedFetch } from "./auth";
 const WP_BASE_URL = "https://esic.ganpatiinfosolutions.com";
 
 export async function uploadMedia(token, file) {
@@ -9,7 +10,7 @@ export async function uploadMedia(token, file) {
     throw new Error("Please select an image.");
   }
 
-  const response = await fetch(`${WP_BASE_URL}/wp-json/wp/v2/media`, {
+  const response = await authenticatedFetch(`${WP_BASE_URL}/wp-json/wp/v2/media`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

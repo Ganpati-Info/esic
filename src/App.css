@@ -600,6 +600,11 @@ form {
   background: var(--orange-dark);
 }
 
+.login-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .login-button:active {
   transform: translateY(1px);
 }
@@ -1603,6 +1608,7 @@ form {
 .hospital-header-right {
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 .hospital-user {
@@ -4022,4 +4028,1171 @@ form {
   .modal-images-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.director-esic-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  background: #faf8ff;
+}
+
+.director-esic-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.director-esic-summary strong {
+  color: #4c1d95;
+  font-size: 15px;
+}
+
+.director-esic-summary span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.director-esic-summary > strong {
+  font-size: 24px;
+}
+
+/* =========================================================
+   ADMIN ALL GRIEVANCES
+========================================================= */
+
+.admin-all-grievances-card {
+  overflow: hidden;
+}
+
+/* FILTER BAR */
+
+.admin-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* SEARCH */
+
+.admin-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 360px;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+}
+
+.admin-search-box:focus-within {
+  border-color: #f47216;
+  box-shadow: 0 0 0 3px rgba(244, 114, 22, 0.08);
+}
+
+.admin-search-box input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #172033;
+  font-size: 14px;
+}
+
+.admin-search-box input::placeholder {
+  color: #94a3b8;
+}
+
+/* FILTER SELECT */
+
+.admin-filter-select {
+  position: relative;
+  min-width: 180px;
+  height: 42px;
+}
+
+.admin-filter-select select {
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  padding: 0 38px 0 13px;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.admin-filter-select select:focus {
+  border-color: #f47216;
+}
+
+.admin-filter-select svg {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #64748b;
+}
+
+/* RESULTS BAR */
+
+.admin-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-clear-filters {
+  border: 0;
+  background: transparent;
+  color: #f47216;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-clear-filters:hover {
+  text-decoration: underline;
+}
+
+/* HOSPITAL NAME */
+
+.admin-hospital-name {
+  display: inline-block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #172033;
+  font-weight: 500;
+}
+
+/* VIEW BUTTON */
+
+.admin-grievance-table .table-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* PAGINATION */
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.admin-rows-per-page {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-rows-per-page select {
+  appearance: none;
+  width: 64px;
+  height: 34px;
+  padding: 0 25px 0 10px;
+  border: 1px solid #d6dce5;
+  border-radius: 7px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  cursor: pointer;
+}
+
+.admin-rows-per-page svg {
+  position: absolute;
+  left: 42px;
+  pointer-events: none;
+  color: #64748b;
+}
+
+.admin-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-page-controls span {
+  margin-right: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.admin-page-controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d6dce5;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.admin-page-controls button:hover:not(:disabled) {
+  border-color: #f47216;
+  color: #f47216;
+}
+
+.admin-page-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+  .admin-filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .admin-search-box {
+    width: 100%;
+  }
+
+  .admin-filter-select {
+    flex: 1;
+  }
+
+  .grievance-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .admin-grievance-table {
+    min-width: 1000px;
+  }
+}
+
+/* =========================================================
+   SESSION EXPIRED MODAL
+========================================================= */
+
+.session-expired-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.session-expired-modal {
+  width: 100%;
+  max-width: 430px;
+
+  padding: 28px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+.session-expired-icon {
+  width: 52px;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 18px;
+
+  border-radius: 50%;
+
+  background: #fff1e8;
+  color: #f47216;
+}
+
+.session-expired-content h2 {
+  margin: 0 0 8px;
+
+  color: #172033;
+
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.session-expired-content p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.session-expired-button {
+  width: 100%;
+  height: 44px;
+
+  margin-top: 24px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #f47216;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.session-expired-button:hover {
+  background: #ea650d;
+}
+
+/* =========================================
+   SELECTED REJECTION SUMMARY
+========================================= */
+
+.selected-rejection-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 15px 16px;
+  border: 1px solid #f0d7c7;
+  border-radius: 9px;
+  background: #fffaf7;
+}
+
+.selected-rejection-summary > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.selected-rejection-summary .modal-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.selected-rejection-summary p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+
+  overflow-wrap: anywhere;
+}
+
+.edit-rejection-button {
+  flex-shrink: 0;
+  border: 1px solid #f47216;
+  background: #ffffff;
+  color: #f47216;
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-rejection-button:hover:not(:disabled) {
+  background: #fff4ec;
+}
+
+.edit-rejection-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* =========================================
+   REJECTION MODAL OVERLAY
+========================================= */
+
+.rejection-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+
+/* =========================================
+   REJECTION MODAL
+========================================= */
+
+.rejection-modal {
+  width: 100%;
+  max-width: 520px;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  box-shadow:
+    0 20px 50px rgba(15, 23, 42, 0.18);
+
+  overflow: hidden;
+
+  animation: rejectionModalIn 0.18s ease-out;
+}
+
+@keyframes rejectionModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+/* =========================================
+   REJECTION MODAL HEADER
+========================================= */
+
+.rejection-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #eef0f3;
+}
+
+.rejection-modal-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rejection-icon {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 8px;
+
+  background: #fff1f2;
+  color: #dc2626;
+}
+
+.rejection-modal-title h3 {
+  margin: 0;
+
+  color: #1f2937;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.rejection-modal-title p {
+  margin: 4px 0 0;
+
+  color: #6b7280;
+
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.rejection-modal-close {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: transparent;
+  color: #6b7280;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.rejection-modal-close:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+
+/* =========================================
+   REJECTION MODAL BODY
+========================================= */
+
+.rejection-modal-body {
+  padding: 22px;
+}
+
+.rejection-grievance-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+  padding: 11px 13px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+
+  background: #f9fafb;
+}
+
+.rejection-grievance-info span {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rejection-grievance-info strong {
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.rejection-modal-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rejection-modal-label span {
+  margin-left: 3px;
+  color: #dc2626;
+}
+
+.rejection-modal-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+
+  min-height: 135px;
+
+  padding: 12px 13px;
+
+  resize: vertical;
+
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #1f2937;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.rejection-modal-body textarea::placeholder {
+  color: #9ca3af;
+}
+
+.rejection-modal-body textarea:focus {
+  border-color: #f47216;
+
+  box-shadow:
+    0 0 0 3px rgba(244, 114, 22, 0.1);
+}
+
+
+/* =========================================
+   REJECTION MODAL BOTTOM
+========================================= */
+
+.rejection-modal-bottom {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  min-height: 20px;
+
+  margin-top: 7px;
+}
+
+.rejection-modal-error {
+  color: #dc2626;
+
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rejection-character-count {
+  margin-left: auto;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+}
+
+
+/* =========================================
+   REJECTION MODAL FOOTER
+========================================= */
+
+.rejection-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 16px 22px;
+
+  border-top: 1px solid #eef0f3;
+
+  background: #fafafa;
+}
+
+.rejection-cancel-button,
+.rejection-confirm-button {
+  min-height: 38px;
+
+  padding: 8px 15px;
+
+  border-radius: 7px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.rejection-cancel-button {
+  border: 1px solid #d9dee7;
+
+  background: #ffffff;
+
+  color: #4b5563;
+}
+
+.rejection-cancel-button:hover {
+  background: #f3f4f6;
+}
+
+.rejection-confirm-button {
+  border: 1px solid #dc2626;
+
+  background: #dc2626;
+
+  color: #ffffff;
+}
+
+.rejection-confirm-button:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .selected-rejection-summary {
+    flex-direction: column;
+  }
+
+  .edit-rejection-button {
+    width: 100%;
+  }
+
+  .rejection-modal-overlay {
+    padding: 14px;
+  }
+
+  .rejection-modal {
+    max-width: 100%;
+  }
+
+  .rejection-modal-header,
+  .rejection-modal-body,
+  .rejection-modal-footer {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+
+  .rejection-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .rejection-cancel-button,
+  .rejection-confirm-button {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   STATUS SECTION
+========================================= */
+
+.modal-status-section {
+  margin-bottom: 28px;
+}
+
+.modal-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal-status-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-edit-status-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d9dee7;
+  background: #ffffff;
+  color: #374151;
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-edit-status-button:hover {
+  border-color: #f47216;
+  color: #f47216;
+  background: #fff7f1;
+}
+
+
+/* =========================================
+   STATUS EDITOR
+========================================= */
+
+.modal-status-editor {
+  display: flex;
+  align-items: center;
+}
+
+.modal-status-select {
+  min-width: 190px;
+  padding: 9px 36px 9px 12px;
+  border: 1px solid #d9dee7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-status-select:focus {
+  border-color: #f47216;
+  box-shadow: 0 0 0 3px rgba(244, 114, 22, 0.12);
+}
+
+.modal-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* =========================================
+   REJECTION REMARK INPUT
+========================================= */
+
+.modal-rejection-section {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #f0d7c7;
+  border-radius: 10px;
+  background: #fffaf7;
+}
+
+.modal-rejection-section label {
+  display: block;
+  margin-bottom: 9px;
+}
+
+.required-mark {
+  margin-left: 3px;
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.modal-rejection-section textarea {
+  width: 100%;
+  min-height: 105px;
+  resize: vertical;
+  box-sizing: border-box;
+
+  padding: 11px 13px;
+  border: 1px solid #d9dee7;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #1f2937;
+
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-rejection-section textarea::placeholder {
+  color: #9ca3af;
+}
+
+.modal-rejection-section textarea:focus {
+  border-color: #f47216;
+  box-shadow: 0 0 0 3px rgba(244, 114, 22, 0.1);
+}
+
+.modal-rejection-section textarea:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.modal-character-count {
+  margin-top: 6px;
+  text-align: right;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+
+/* =========================================
+   EXISTING REJECTION REMARK
+========================================= */
+
+.modal-rejection-display {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-left: 3px solid #dc2626;
+  border-radius: 6px;
+  background: #fff7f7;
+}
+
+.modal-rejection-display .modal-label {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.modal-rejection-display p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+
+/* =========================================
+   STATUS ERROR
+========================================= */
+
+.modal-status-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+
+/* =========================================
+   STATUS ACTIONS
+========================================= */
+
+.modal-status-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.modal-status-cancel,
+.modal-status-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 38px;
+  padding: 8px 14px;
+
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-status-cancel {
+  border: 1px solid #d9dee7;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.modal-status-cancel:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #cbd5e1;
+}
+
+.modal-status-save {
+  border: 1px solid #f47216;
+  background: #f47216;
+  color: #ffffff;
+}
+
+.modal-status-save:hover:not(:disabled) {
+  background: #e85f08;
+  border-color: #e85f08;
+}
+
+.modal-status-cancel:disabled,
+.modal-status-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 600px) {
+  .modal-status-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .modal-status-display {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .modal-status-editor {
+    width: 100%;
+  }
+
+  .modal-status-select {
+    width: 100%;
+  }
+
+  .modal-status-actions {
+    width: 100%;
+  }
+
+  .modal-status-cancel,
+  .modal-status-save {
+    flex: 1;
+  }
+}
+
+.modal-workflow-section {
+  margin-top: 16px;
+}
+
+.modal-workflow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 9px;
+}
+
+.modal-workflow-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.modal-workflow-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.modal-workflow-button.reject {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.modal-workflow-button.reject:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.modal-workflow-button.send {
+  color: #6d28d9;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.modal-workflow-button.send:hover:not(:disabled) {
+  background: #ede9fe;
+}
+
+.modal-workflow-button.progress {
+  color: #c2410c;
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.modal-workflow-button.progress:hover:not(:disabled) {
+  background: #ffedd5;
+}
+
+.modal-workflow-button.resolve {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.modal-workflow-button.resolve:hover:not(:disabled) {
+  background: #d1fae5;
+}
+
+.modal-status-saving {
+  margin-top: 9px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.modal-rejection-display {
+  margin-top: 14px;
+  padding: 13px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.modal-rejection-display .modal-label {
+  color: #b91c1c;
+}
+
+.modal-rejection-display p {
+  margin: 7px 0 0;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.grievance-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.modal-footer-actions .modal-status-saving {
+  margin-right: auto;
 }
