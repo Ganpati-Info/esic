@@ -5196,3 +5196,922 @@ form {
 .modal-footer-actions .modal-status-saving {
   margin-right: auto;
 }
+
+/* =========================================
+   ESIC OFFICER PORTAL
+   ========================================= */
+
+.esic-page {
+  padding: 28px 30px;
+  background: #ffffff;
+  min-height: calc(100vh - 80px);
+}
+
+.esic-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.esic-page-header h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.esic-page-header p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Dashboard cards */
+
+.esic-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.esic-stat-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.esic-stat-card-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.esic-stat-card-value {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.esic-stat-card.orange {
+  border-left: 4px solid #f47216;
+}
+
+.esic-stat-card.blue {
+  border-left: 4px solid #2563eb;
+}
+
+.esic-stat-card.green {
+  border-left: 4px solid #16a34a;
+}
+
+.esic-stat-card.gray {
+  border-left: 4px solid #6b7280;
+}
+
+/* Sections */
+
+.esic-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.esic-section-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.esic-section-header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  color: #1f2937;
+}
+
+/* Table */
+
+.esic-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.esic-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+}
+
+.esic-table th {
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.esic-table td {
+  padding: 15px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.esic-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.esic-token {
+  font-weight: 650;
+  color: #1f2937;
+}
+
+.esic-title {
+  max-width: 280px;
+  font-weight: 550;
+  color: #1f2937;
+}
+
+.esic-hospital {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Status */
+
+.esic-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.esic-status.sent-to-esic {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.esic-status.in-progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.esic-status.resolved {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* Filters */
+
+.esic-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.esic-search {
+  flex: 1;
+  min-width: 220px;
+  height: 40px;
+  padding: 0 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  font-size: 14px;
+  color: #1f2937;
+  background: #ffffff;
+}
+
+.esic-search:focus {
+  border-color: #f47216;
+  box-shadow: 0 0 0 3px rgba(244, 114, 22, 0.1);
+}
+
+.esic-filter-select {
+  height: 40px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  outline: none;
+}
+
+.esic-filter-select:focus {
+  border-color: #f47216;
+}
+
+/* Buttons */
+
+.esic-button {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.esic-button-primary {
+  background: #f47216;
+  color: #ffffff;
+}
+
+.esic-button-primary:hover {
+  background: #ea580c;
+}
+
+.esic-button-secondary {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.esic-button-secondary:hover {
+  background: #f9fafb;
+}
+
+/* View button */
+
+.esic-view-button {
+  height: 34px;
+  padding: 0 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.esic-view-button:hover {
+  border-color: #f47216;
+  color: #f47216;
+}
+
+/* Empty state */
+
+.esic-empty-state {
+  padding: 50px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.esic-empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #374151;
+}
+
+.esic-empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Loading */
+
+.esic-loading {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Error */
+
+.esic-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+/* Pagination */
+
+.esic-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.esic-pagination-info {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.esic-pagination-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.esic-pagination-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.esic-pagination-button:hover:not(:disabled) {
+  border-color: #f47216;
+  color: #f47216;
+}
+
+.esic-pagination-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .esic-dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .esic-page {
+    padding: 20px 16px;
+  }
+
+  .esic-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .esic-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .esic-search {
+    width: 100%;
+  }
+
+  .esic-filter-select {
+    width: 100%;
+  }
+
+  .esic-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .esic-pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+
+/* =========================================
+   ESIC MODULE
+   ========================================= */
+
+.esic-dashboard,
+.esic-grievances-page {
+  width: 100%;
+}
+
+/* ESIC dashboard recent table */
+
+.esic-recent-card {
+  overflow: hidden;
+}
+
+.esic-recent-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.esic-recent-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.esic-recent-table th {
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.esic-recent-table td {
+  padding: 15px 18px;
+  font-size: 14px;
+  color: #374151;
+  border-bottom: 1px solid #f1f1f1;
+  white-space: nowrap;
+}
+
+.esic-recent-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.esic-recent-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.esic-recent-title {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: #1f2937 !important;
+}
+
+/* ESIC status colors */
+
+.status.sent-to-esic {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.status.in-progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.status.resolved {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* ESIC page table */
+
+.esic-grievances-page .grievance-table {
+  min-width: 1050px;
+}
+
+.esic-grievances-page .grievance-table th,
+.esic-grievances-page .grievance-table td {
+  white-space: nowrap;
+}
+
+.esic-grievances-page .grievance-title-cell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hospital name */
+
+.esic-grievances-page .admin-hospital-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* View button */
+
+.esic-grievances-page .table-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Empty state */
+
+.esic-grievances-page .empty-grievances {
+  min-height: 220px;
+}
+
+/* Responsive */
+
+@media (max-width: 1200px) {
+  .esic-recent-table {
+    min-width: 850px;
+  }
+}
+
+@media (max-width: 768px) {
+  .esic-dashboard,
+  .esic-grievances-page {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .esic-recent-table {
+    min-width: 800px;
+  }
+
+  .esic-grievances-page .grievance-table {
+    min-width: 950px;
+  }
+}
+
+/* =========================================
+   ESIC DASHBOARD
+   ========================================= */
+
+.esic-dashboard .dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+  margin-top: 24px;
+}
+
+.esic-dashboard .dashboard-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  min-height: 105px;
+  box-sizing: border-box;
+}
+
+.esic-dashboard .dashboard-stat-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #f47216;
+}
+
+.esic-dashboard .dashboard-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.esic-dashboard .dashboard-stat-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.esic-dashboard .dashboard-stat-content strong {
+  font-size: 27px;
+  line-height: 1;
+  color: #111827;
+  font-weight: 700;
+}
+
+/* Recent grievances card */
+
+.esic-dashboard .esic-recent-card {
+  margin-top: 0;
+}
+
+.esic-dashboard .esic-recent-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.esic-dashboard .esic-recent-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.esic-dashboard .esic-recent-table th {
+  padding: 14px 16px;
+  text-align: left;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.esic-dashboard .esic-recent-table td {
+  padding: 15px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #374151;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.esic-dashboard .esic-recent-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.esic-dashboard .esic-recent-title {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #111827;
+  font-weight: 500;
+}
+
+/* View action */
+
+.esic-dashboard .esic-view-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.esic-dashboard .esic-view-button:hover {
+  border-color: #f47216;
+  color: #f47216;
+  background: #fffaf5;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .esic-dashboard .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .esic-dashboard .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================
+   ESIC DASHBOARD
+========================================= */
+
+.esic-dashboard {
+  width: 100%;
+}
+
+/* =========================================
+   STAT CARDS
+========================================= */
+
+.esic-dashboard .dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.esic-dashboard .dashboard-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  min-height: 105px;
+  box-sizing: border-box;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.esic-dashboard .dashboard-stat-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: #fff7ed;
+  color: #f47216;
+}
+
+.esic-dashboard .dashboard-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.esic-dashboard .dashboard-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.esic-dashboard .dashboard-stat-content strong {
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* =========================================
+   RECENT GRIEVANCES
+========================================= */
+
+.esic-dashboard .esic-recent-card {
+  overflow: hidden;
+}
+
+.esic-dashboard .esic-recent-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.esic-dashboard .esic-recent-table {
+  width: 100%;
+  min-width: 950px;
+  border-collapse: collapse;
+}
+
+.esic-dashboard .esic-recent-table th {
+  padding: 14px 16px;
+
+  text-align: left;
+  white-space: nowrap;
+
+  background: #fafafa;
+  border-bottom: 1px solid #e5e7eb;
+
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.esic-dashboard .esic-recent-table td {
+  padding: 15px 16px;
+
+  border-bottom: 1px solid #f0f0f0;
+
+  color: #374151;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.esic-dashboard .esic-recent-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.esic-dashboard .esic-recent-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* =========================================
+   GRIEVANCE TITLE
+========================================= */
+
+.esic-dashboard .esic-recent-title {
+  max-width: 330px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #111827;
+  font-weight: 500;
+}
+
+/* =========================================
+   STATUS BADGES
+========================================= */
+
+.esic-dashboard .status.sent-to-esic {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.esic-dashboard .status.in-progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.esic-dashboard .status.resolved {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* =========================================
+   VIEW BUTTON
+========================================= */
+
+.esic-dashboard .esic-view-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.esic-dashboard .esic-view-button:hover {
+  border-color: #f47216;
+  color: #f47216;
+  background: #fffaf5;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+  .esic-dashboard .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .esic-dashboard .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .esic-dashboard .esic-recent-table {
+    min-width: 900px;
+  }
+}
+
+.dashboard-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  height: 34px;
+  padding: 0 12px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+
+  background: #ffffff;
+  color: #374151;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}

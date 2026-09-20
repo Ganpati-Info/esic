@@ -230,7 +230,7 @@ export async function updateGrievanceStatus(
     input.rejectionRemark = trimmedRemark;
   }
 
-  const response = await fetch("https://esic.ganpatiinfosolutions.com/graphql", {
+  const response = await authenticatedFetch(`${WP_BASE_URL}/graphql`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

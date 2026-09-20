@@ -204,7 +204,7 @@ function CreateGrievance() {
 
       if (!aiResponse.ok) {
         throw new Error(
-          aiData?.error || "Unable to generate AI reference image.",
+          aiData?.error || "Unable to generate the desired outcome.",
         );
       }
 
@@ -260,7 +260,7 @@ function CreateGrievance() {
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "Unable to generate AI reference image.",
+          : "Unable to generate the desired outcome.",
       );
     } finally {
       setIsGenerating(false);
@@ -516,7 +516,7 @@ function CreateGrievance() {
               </div>
 
               <div>
-                <h2>Generate AI Reference Image</h2>
+                <h2>Generate a desired outcome image</h2>
 
                 <p>
                   Generate a visual reference to help explain the reported
