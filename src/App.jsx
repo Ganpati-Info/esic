@@ -6,6 +6,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Sidebar from "./components/Sidebar";
@@ -14,8 +15,12 @@ import HospitalHeader from "./components/HospitalHeader";
 import HospitalDashboard from "./pages/hospital/HospitalDashboard";
 import CreateGrievance from "./pages/hospital/CreateGrievance";
 import MyGrievances from "./pages/hospital/MyGrievances";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AllGrievances from "./pages/admin/AllGrievances";
+
+import EsicDashboard from "./pages/esic/EsicDashboard";
+import EsicGrievances from "./pages/esic/EsicGrievances";
 
 import Login from "./pages/Login";
 import SessionExpiredModal from "./components/SessionExpiredModal";
@@ -23,8 +28,8 @@ import SessionExpiredModal from "./components/SessionExpiredModal";
 import "./App.css";
 
 /* =========================================================
-    SESSION MANAGER
-  ========================================================= */
+   SESSION MANAGER
+========================================================= */
 
 function SessionManager() {
   const navigate = useNavigate();
@@ -45,7 +50,6 @@ function SessionManager() {
 
   const handleLoginAgain = () => {
     sessionStorage.removeItem("esicToken");
-
     sessionStorage.removeItem("esicUser");
 
     setSessionExpired(false);
@@ -75,6 +79,7 @@ function getStoredUser() {
     return JSON.parse(storedUser);
   } catch {
     sessionStorage.removeItem("esicUser");
+
     return null;
   }
 }
@@ -89,17 +94,15 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   /*
    * Not logged in
    */
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
   /*
    * Logged in but role is not allowed.
-   *
-   * IMPORTANT:
-   * Do NOT redirect to another protected module.
-   * Doing that can create an infinite redirect loop.
    */
+
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     console.error("Unauthorized route access:", {
       role: user.role,
@@ -126,9 +129,7 @@ function HospitalLayout() {
 
   const activeItems = {
     "/hospital/dashboard": "Dashboard",
-
     "/hospital/grievances": "My Grievances",
-
     "/hospital/grievances/create": "Create Grievance",
   };
 
@@ -147,7 +148,6 @@ function HospitalLayout() {
 
     if (item === "Logout") {
       sessionStorage.removeItem("esicUser");
-
       sessionStorage.removeItem("esicToken");
     }
 
@@ -199,7 +199,6 @@ function AdminLayout() {
 
   const activeItems = {
     "/admin/dashboard": "Dashboard",
-
     "/admin/grievances": "All Grievances",
   };
 
@@ -216,7 +215,6 @@ function AdminLayout() {
 
     if (item === "Logout") {
       sessionStorage.removeItem("esicUser");
-
       sessionStorage.removeItem("esicToken");
     }
 
@@ -249,6 +247,80 @@ function AdminLayout() {
 }
 
 /* =========================================================
+   ESIC LAYOUT
+========================================================= */
+
+function EsicLayout() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const currentUser = getStoredUser();
+
+  const esicName = currentUser?.name || "ESIC Officer";
+
+  /*
+   * IMPORTANT:
+   *
+   * Sidebar uses "All Grievances"
+   * for the ESIC grievance menu item.
+   */
+
+  const activeItems = {
+    "/esic/dashboard": "Dashboard",
+    "/esic/grievances": "All Grievances",
+  };
+
+  const activeItem = activeItems[location.pathname] || "Dashboard";
+
+  const handleNavigate = (item) => {
+    const paths = {
+      Dashboard: "/esic/dashboard",
+
+      "All Grievances": "/esic/grievances",
+
+      Logout: "/login",
+    };
+
+    if (item === "Logout") {
+      sessionStorage.removeItem("esicUser");
+      sessionStorage.removeItem("esicToken");
+
+      navigate("/login", {
+        replace: true,
+      });
+
+      return;
+    }
+
+    navigate(paths[item] || "/esic/dashboard");
+  };
+
+  return (
+    <div className="hospital-app">
+      <Sidebar
+        mode="esic"
+        activeItem={activeItem}
+        onNavigate={handleNavigate}
+      />
+
+      <div className="hospital-content">
+        <HospitalHeader hospitalName={esicName} userRole="ESIC Officer" />
+
+        <main className="hospital-main">
+          <Routes>
+            <Route path="dashboard" element={<EsicDashboard />} />
+
+            <Route path="grievances" element={<EsicGrievances />} />
+
+            <Route path="*" element={<Navigate to="dashboard" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
    APP
 ========================================================= */
 
@@ -257,8 +329,8 @@ function App() {
     <>
       <Routes>
         {/* =================================================
-          LOGIN
-      ================================================= */}
+            LOGIN
+        ================================================= */}
 
         <Route
           path="/login"
@@ -274,8 +346,8 @@ function App() {
         />
 
         {/* =================================================
-          HOSPITAL MODULE
-      ================================================= */}
+            HOSPITAL MODULE
+        ================================================= */}
 
         <Route
           path="/hospital/*"
@@ -287,8 +359,8 @@ function App() {
         />
 
         {/* =================================================
-          DIRECTOR / ADMIN MODULE
-      ================================================= */}
+            DIRECTOR / ADMIN MODULE
+        ================================================= */}
 
         <Route
           path="/admin/*"
@@ -300,11 +372,25 @@ function App() {
         />
 
         {/* =================================================
-          FALLBACK
-      ================================================= */}
+            ESIC MODULE
+        ================================================= */}
+
+        <Route
+          path="/esic/*"
+          element={
+            <ProtectedRoute allowedRoles={["esic_user"]}>
+              <EsicLayout />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =================================================
+            FALLBACK
+        ================================================= */}
 
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+
       <SessionManager />
     </>
   );

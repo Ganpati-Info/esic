@@ -123,6 +123,14 @@ function Login() {
         return;
       }
 
+      if (userRole === "esic_user") {
+        navigate("/esic/dashboard", {
+          replace: true,
+        });
+
+        return;
+      }
+
       /*
        * Unknown / unsupported role.
        */

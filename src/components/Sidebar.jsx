@@ -14,10 +14,14 @@ function Sidebar({
   mode = "hospital",
 }) {
   const isAdmin = mode === "admin";
+  const isEsic = mode === "esic";
+  const isHospital = mode === "hospital";
 
   return (
     <aside className="hospital-sidebar">
-      {/* BRAND */}
+      {/* =====================================================
+          BRAND
+      ===================================================== */}
 
       <div className="sidebar-brand">
         <div className="sidebar-logo">
@@ -37,10 +41,14 @@ function Sidebar({
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* =====================================================
+          NAVIGATION
+      ===================================================== */}
 
       <nav className="sidebar-navigation">
-        {/* DASHBOARD */}
+        {/* ===================================================
+            DASHBOARD
+        =================================================== */}
 
         <button
           type="button"
@@ -54,7 +62,9 @@ function Sidebar({
           <span>Dashboard</span>
         </button>
 
-        {/* GRIEVANCES */}
+        {/* ===================================================
+            GRIEVANCES
+        =================================================== */}
 
         <div className="sidebar-section">
           <div className="sidebar-section-title">
@@ -62,9 +72,11 @@ function Sidebar({
             <FiChevronDown size={17} />
           </div>
 
-          {isAdmin ? (
-            /* ADMIN / DIRECTOR */
+          {/* =================================================
+              ADMIN / DIRECTOR
+          ================================================= */}
 
+          {isAdmin && (
             <button
               type="button"
               className={
@@ -78,9 +90,33 @@ function Sidebar({
 
               <span>All Grievances</span>
             </button>
-          ) : (
-            /* HOSPITAL */
+          )}
 
+          {/* =================================================
+              ESIC OFFICER
+          ================================================= */}
+
+          {isEsic && (
+            <button
+              type="button"
+              className={
+                activeItem === "All Grievances"
+                  ? "sidebar-subitem active"
+                  : "sidebar-subitem"
+              }
+              onClick={() => onNavigate?.("All Grievances")}
+            >
+              <FiFileText size={19} />
+
+              <span>All Grievances</span>
+            </button>
+          )}
+
+          {/* =================================================
+              HOSPITAL
+          ================================================= */}
+
+          {isHospital && (
             <>
               <button
                 type="button"
@@ -114,7 +150,9 @@ function Sidebar({
         </div>
       </nav>
 
-      {/* BOTTOM USER CARD */}
+      {/* =====================================================
+          BOTTOM USER CARD
+      ===================================================== */}
 
       <div className="sidebar-bottom">
         <div className="hospital-info-card">
@@ -123,17 +161,41 @@ function Sidebar({
           </div>
 
           <div className="hospital-info">
-            <div className="hospital-name">
-              {isAdmin ? "Director" : hospitalName}
-            </div>
+            {/* ADMIN */}
 
-            <div className="hospital-location">
-              {isAdmin ? "ESIC (MB)" : "Kolkata, West Bengal"}
-            </div>
+            {isAdmin && (
+              <>
+                <div className="hospital-name">Director</div>
+
+                <div className="hospital-location">ESIC (MB)</div>
+              </>
+            )}
+
+            {/* ESIC */}
+
+            {isEsic && (
+              <>
+                <div className="hospital-name">ESIC Officer</div>
+
+                <div className="hospital-location">ESIC (MB)</div>
+              </>
+            )}
+
+            {/* HOSPITAL */}
+
+            {isHospital && (
+              <>
+                <div className="hospital-name">{hospitalName}</div>
+
+                <div className="hospital-location">Kolkata, West Bengal</div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* LOGOUT */}
+        {/* ===================================================
+            LOGOUT
+        =================================================== */}
 
         <button
           type="button"
