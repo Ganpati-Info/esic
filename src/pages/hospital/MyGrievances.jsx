@@ -9,12 +9,14 @@ import {
   FiX,
   FiArrowUp,
   FiArrowDown,
+  FiClock,
   FiChevronDown as FiChevronsUpDown,
   FiFileText,
 } from "react-icons/fi";
 
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -70,13 +72,26 @@ function MyGrievances() {
   });
 
   const [currentPage, setCurrentPage] = useState(1);
+
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  /*
+   * Normal grievance detail modal
+   */
   const [selectedGrievance, setSelectedGrievance] = useState(null);
 
+  /*
+   * Separate timeline modal
+   *
+   * Hospital is VIEW ONLY.
+   */
+  const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
+    useState(null);
 
   function formatDisplayDate(value) {
-    if (!value || value === "N/A") return "N/A";
+    if (!value || value === "N/A") {
+      return "N/A";
+    }
 
     const date = new Date(value);
 
@@ -92,7 +107,9 @@ function MyGrievances() {
   }
 
   /*
+   * =========================================================
    * LOAD GRIEVANCES
+   * =========================================================
    */
 
   useEffect(() => {
@@ -114,16 +131,31 @@ function MyGrievances() {
 
           return {
             id: grievance.databaseId,
+
             tokenNo: details.tokenNumber || "N/A",
+
             title: grievance.title || "Untitled Grievance",
+
             submittedOn: formatDisplayDate(grievance.date),
+
             lastUpdated: formatDisplayDate(grievance.modified),
+
             status: normalizeStatus(grievance.statusLabel || ""),
+
             description: details.description || "",
+
             image: grievance.currentImageUrl || null,
+
             generatedImageUrl: grievance.generatedImageUrl || null,
+
             rejectionRemark: grievance.rejectionRemark || "",
+
             hospitalName: grievance.creator?.username || "N/A",
+
+            /*
+             * Timeline events from GraphQL
+             */
+            timeline: grievance.timeline || [],
           };
         });
 
@@ -131,7 +163,9 @@ function MyGrievances() {
       } catch (err) {
         console.error("Failed to load grievances:", err);
 
-        setError(err.message || "Unable to load grievances. Please try again.");
+        setError(
+          err?.message || "Unable to load grievances. Please try again.",
+        );
       } finally {
         setLoading(false);
       }
@@ -141,13 +175,17 @@ function MyGrievances() {
   }, []);
 
   /*
+   * =========================================================
    * FILTER + SEARCH + SORT
+   * =========================================================
    */
 
   const filteredGrievances = useMemo(() => {
     let result = [...grievances];
 
-    // SEARCH
+    /*
+     * SEARCH
+     */
 
     if (search.trim()) {
       const searchValue = search.toLowerCase().trim();
@@ -159,16 +197,21 @@ function MyGrievances() {
       );
     }
 
-    // STATUS FILTER
+    /*
+     * STATUS FILTER
+     */
 
     if (statusFilter !== "All") {
       result = result.filter((grievance) => grievance.status === statusFilter);
     }
 
-    // SORT
+    /*
+     * SORT
+     */
 
     result.sort((a, b) => {
       let valueA = a[sortConfig.key];
+
       let valueB = b[sortConfig.key];
 
       if (
@@ -178,10 +221,16 @@ function MyGrievances() {
         valueA = new Date(valueA);
         valueB = new Date(valueB);
 
-        if (Number.isNaN(valueA.getTime())) valueA = new Date(0);
-        if (Number.isNaN(valueB.getTime())) valueB = new Date(0);
+        if (Number.isNaN(valueA.getTime())) {
+          valueA = new Date(0);
+        }
+
+        if (Number.isNaN(valueB.getTime())) {
+          valueB = new Date(0);
+        }
       } else {
         valueA = String(valueA ?? "").toLowerCase();
+
         valueB = String(valueB ?? "").toLowerCase();
       }
 
@@ -200,7 +249,9 @@ function MyGrievances() {
   }, [grievances, search, statusFilter, sortConfig]);
 
   /*
+   * =========================================================
    * PAGINATION
+   * =========================================================
    */
 
   const totalPages = Math.max(
@@ -217,7 +268,9 @@ function MyGrievances() {
   const paginatedGrievances = filteredGrievances.slice(startIndex, endIndex);
 
   /*
+   * =========================================================
    * SORT HANDLER
+   * =========================================================
    */
 
   const handleSort = (key) => {
@@ -239,7 +292,9 @@ function MyGrievances() {
   };
 
   /*
+   * =========================================================
    * SEARCH HANDLER
+   * =========================================================
    */
 
   const handleSearch = (event) => {
@@ -248,25 +303,33 @@ function MyGrievances() {
   };
 
   /*
+   * =========================================================
    * FILTER HANDLER
+   * =========================================================
    */
 
   const handleStatusFilter = (event) => {
     setStatusFilter(event.target.value);
+
     setCurrentPage(1);
   };
 
   /*
+   * =========================================================
    * ROWS PER PAGE
+   * =========================================================
    */
 
   const handleRowsPerPage = (event) => {
     setRowsPerPage(Number(event.target.value));
+
     setCurrentPage(1);
   };
 
   /*
+   * =========================================================
    * SORT ICON
+   * =========================================================
    */
 
   const SortIcon = ({ column }) => {
@@ -282,7 +345,9 @@ function MyGrievances() {
   };
 
   /*
+   * =========================================================
    * PAGINATION NUMBERS
+   * =========================================================
    */
 
   const getPageNumbers = () => {
@@ -303,6 +368,7 @@ function MyGrievances() {
     }
 
     const start = Math.max(2, safeCurrentPage - 1);
+
     const end = Math.min(totalPages - 1, safeCurrentPage + 1);
 
     for (let i = start; i <= end; i++) {
@@ -320,7 +386,9 @@ function MyGrievances() {
 
   return (
     <div className="my-grievances-page">
-      {/* PAGE HEADER */}
+      {/* =====================================================
+          PAGE HEADER
+      ===================================================== */}
 
       <div className="my-grievances-header">
         <div>
@@ -332,10 +400,14 @@ function MyGrievances() {
         </div>
       </div>
 
-      {/* TABLE CARD */}
+      {/* =====================================================
+          TABLE CARD
+      ===================================================== */}
 
       <section className="my-grievances-card">
-        {/* TOOLBAR */}
+        {/* ===================================================
+            TOOLBAR
+        =================================================== */}
 
         <div className="grievances-toolbar">
           {/* SEARCH */}
@@ -369,10 +441,15 @@ function MyGrievances() {
           <div className="status-filter">
             <select value={statusFilter} onChange={handleStatusFilter}>
               <option value="All">All Statuses</option>
+
               <option value="Sent to Director">Sent to Director</option>
+
               <option value="In Progress">In Progress</option>
+
               <option value="Resolved">Resolved</option>
+
               <option value="Rejected">Rejected</option>
+
               <option value="Sent to ESIC">Sent to ESIC</option>
             </select>
 
@@ -380,7 +457,9 @@ function MyGrievances() {
           </div>
         </div>
 
-        {/* RESULT SUMMARY */}
+        {/* ===================================================
+            RESULT SUMMARY
+        =================================================== */}
 
         <div className="grievance-result-summary">
           <span>
@@ -393,7 +472,9 @@ function MyGrievances() {
           </span>
         </div>
 
-        {/* TABLE */}
+        {/* ===================================================
+            TABLE
+        =================================================== */}
 
         <div className="my-grievances-table-wrapper">
           <table className="my-grievances-table">
@@ -503,14 +584,35 @@ function MyGrievances() {
                     </td>
 
                     <td>
-                      <button
-                        type="button"
-                        className="grievance-view-button"
-                        onClick={() => setSelectedGrievance(grievance)}
-                      >
-                        <FiEye size={15} />
-                        View
-                      </button>
+                      <div className="grievance-action-buttons">
+                        {/* NORMAL VIEW */}
+
+                        <button
+                          type="button"
+                          className="grievance-view-button"
+                          onClick={() => setSelectedGrievance(grievance)}
+                          title="View Grievance"
+                        >
+                          <FiEye size={15} />
+
+                          <span>View</span>
+                        </button>
+
+                        {/* TIMELINE VIEW */}
+
+                        <button
+                          type="button"
+                          className="timeline-table-button"
+                          onClick={() =>
+                            setSelectedTimelineGrievance(grievance)
+                          }
+                          title="View Timeline"
+                        >
+                          <FiClock size={15} />
+
+                          <span>Timeline</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -531,7 +633,9 @@ function MyGrievances() {
           </table>
         </div>
 
-        {/* PAGINATION */}
+        {/* ===================================================
+            PAGINATION
+        =================================================== */}
 
         <div className="grievances-pagination">
           <div className="rows-per-page">
@@ -540,7 +644,9 @@ function MyGrievances() {
             <div className="rows-select">
               <select value={rowsPerPage} onChange={handleRowsPerPage}>
                 <option value={5}>5</option>
+
                 <option value={10}>10</option>
+
                 <option value={20}>20</option>
               </select>
 
@@ -591,11 +697,24 @@ function MyGrievances() {
         </div>
       </section>
 
-      {/* VIEW MODAL */}
+      {/* =====================================================
+          NORMAL GRIEVANCE MODAL
+      ===================================================== */}
 
       <GrievanceModal
         grievance={selectedGrievance}
         onClose={() => setSelectedGrievance(null)}
+      />
+
+      {/* =====================================================
+          TIMELINE MODAL
+          HOSPITAL = VIEW ONLY
+      ===================================================== */}
+
+      <GrievanceTimelineModal
+        grievance={selectedTimelineGrievance}
+        onClose={() => setSelectedTimelineGrievance(null)}
+        canEdit={false}
       />
     </div>
   );

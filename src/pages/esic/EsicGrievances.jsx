@@ -10,11 +10,14 @@ import {
   FiSearch,
   FiArrowUp,
   FiArrowDown,
+  FiClock,
 } from "react-icons/fi";
+
 import { LuArrowUpDown } from "react-icons/lu";
 
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
 /* =========================================================
    STATUS HELPERS
@@ -125,7 +128,22 @@ function EsicGrievances() {
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  /*
+   * IMPORTANT
+   *
+   * These are two completely separate modal states.
+   *
+   * selectedGrievance
+   * -> normal grievance detail modal
+   *
+   * selectedTimelineGrievance
+   * -> timeline modal
+   */
+
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+
+  const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
+    useState(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -195,6 +213,12 @@ function EsicGrievances() {
             generatedImageUrl: grievance.generatedImageUrl || null,
 
             rejectionRemark: grievance.rejectionRemark || "",
+
+            /*
+             * Timeline data comes directly from
+             * the GraphQL timeline field.
+             */
+            timeline: grievance.timeline || [],
           };
         })
         .filter((grievance) => {
@@ -257,7 +281,40 @@ function EsicGrievances() {
       }),
     );
 
+    /*
+     * Update the currently open
+     * detail modal if applicable.
+     */
+
     setSelectedGrievance((currentGrievance) => {
+      if (!currentGrievance) {
+        return currentGrievance;
+      }
+
+      if (currentGrievance.id !== grievanceId) {
+        return currentGrievance;
+      }
+
+      return {
+        ...currentGrievance,
+
+        status: statusLabel || currentGrievance.status,
+
+        rejectionRemark:
+          rejectionRemark || currentGrievance.rejectionRemark || "",
+
+        lastUpdated: modified
+          ? formatDisplayDate(modified)
+          : currentGrievance.lastUpdated,
+      };
+    });
+
+    /*
+     * Keep the timeline modal's
+     * grievance status synchronized too.
+     */
+
+    setSelectedTimelineGrievance((currentGrievance) => {
       if (!currentGrievance) {
         return currentGrievance;
       }
@@ -289,6 +346,9 @@ function EsicGrievances() {
     return ["Sent to ESIC", "In Progress", "Resolved"];
   }, []);
 
+  /* =========================================================
+     HOSPITAL OPTIONS
+  ========================================================= */
 
   const hospitals = useMemo(() => {
     const uniqueHospitals = [
@@ -336,6 +396,7 @@ function EsicGrievances() {
         sortConfig.key === "lastUpdated"
       ) {
         firstValue = new Date(firstValue);
+
         secondValue = new Date(secondValue);
 
         if (Number.isNaN(firstValue.getTime())) {
@@ -472,14 +533,17 @@ function EsicGrievances() {
             />
           </div>
 
-          {/* STATUS */}
+          {/* FILTERS */}
 
           <div className="admin-filter">
+            {/* HOSPITAL */}
+
             <div className="admin-filter-select">
               <select
                 value={selectedHospital}
                 onChange={(event) => {
                   setSelectedHospital(event.target.value);
+
                   setCurrentPage(1);
                 }}
               >
@@ -494,6 +558,9 @@ function EsicGrievances() {
 
               <FiChevronDown size={17} />
             </div>
+
+            {/* STATUS */}
+
             <div className="admin-filter-select">
               <select
                 value={selectedStatus}
@@ -704,15 +771,35 @@ function EsicGrievances() {
                     {/* ACTION */}
 
                     <td>
-                      <button
-                        type="button"
-                        className="table-view"
-                        onClick={() => setSelectedGrievance(grievance)}
-                      >
-                        <FiEye size={15} />
+                      <div className="grievance-action-buttons">
+                        {/* NORMAL DETAIL VIEW */}
 
-                        <span>View</span>
-                      </button>
+                        <button
+                          type="button"
+                          className="table-view"
+                          onClick={() => setSelectedGrievance(grievance)}
+                          title="View Grievance"
+                        >
+                          <FiEye size={15} />
+
+                          <span>View</span>
+                        </button>
+
+                        {/* TIMELINE VIEW */}
+
+                        <button
+                          type="button"
+                          className="timeline-table-button"
+                          onClick={() =>
+                            setSelectedTimelineGrievance(grievance)
+                          }
+                          title="View Timeline"
+                        >
+                          <FiClock size={15} />
+
+                          <span>Timeline</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -780,13 +867,24 @@ function EsicGrievances() {
       </section>
 
       {/* =====================================================
-          GRIEVANCE MODAL
+          NORMAL GRIEVANCE DETAIL MODAL
       ===================================================== */}
 
       <GrievanceModal
         grievance={selectedGrievance}
         onClose={() => setSelectedGrievance(null)}
         onStatusUpdate={handleStatusUpdate}
+      />
+
+      {/* =====================================================
+          GRIEVANCE TIMELINE MODAL
+          ESIC = EDITABLE
+      ===================================================== */}
+
+      <GrievanceTimelineModal
+        grievance={selectedTimelineGrievance}
+        onClose={() => setSelectedTimelineGrievance(null)}
+        canEdit={true}
       />
     </div>
   );

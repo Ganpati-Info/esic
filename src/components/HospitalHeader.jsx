@@ -1,9 +1,6 @@
 import { FiUser } from "react-icons/fi";
 
-function HospitalHeader({
-  hospitalName = "ESIC User",
-  userRole = "Hospital User",
-}) {
+function HospitalHeader({ hospitalName, userRole }) {
   return (
     <header className="hospital-header">
       {/* <div className="hospital-search">

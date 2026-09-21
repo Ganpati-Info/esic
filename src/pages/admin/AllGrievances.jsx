@@ -9,11 +9,13 @@ import {
   FiInbox,
   FiArrowUp,
   FiArrowDown,
+  FiClock,
   FiChevronDown as FiChevronsUpDown,
 } from "react-icons/fi";
 
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -88,7 +90,9 @@ function AllGrievances() {
   const [grievances, setGrievances] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
+
   const [selectedHospital, setSelectedHospital] = useState("all");
+
   const [selectedStatus, setSelectedStatus] = useState("all");
 
   const [sortConfig, setSortConfig] = useState({
@@ -100,11 +104,26 @@ function AllGrievances() {
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  /*
+   * Normal grievance detail modal.
+   */
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+
+  /*
+   * Separate timeline modal.
+   *
+   * Admin can only view the timeline.
+   */
+  const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
+    useState(null);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  /* =========================================================
+     STATUS UPDATE
+  ========================================================= */
 
   const handleStatusUpdate = ({
     grievanceId,
@@ -120,14 +139,22 @@ function AllGrievances() {
 
         return {
           ...grievance,
+
           status: statusLabel || grievance.status,
+
           rejectionRemark: rejectionRemark || grievance.rejectionRemark || "",
+
           lastUpdated: modified
             ? formatDisplayDate(modified)
             : grievance.lastUpdated,
         };
       }),
     );
+
+    /*
+     * Keep the normal detail modal
+     * synchronized.
+     */
 
     setSelectedGrievance((currentGrievance) => {
       if (!currentGrievance) {
@@ -140,9 +167,40 @@ function AllGrievances() {
 
       return {
         ...currentGrievance,
+
         status: statusLabel || currentGrievance.status,
+
         rejectionRemark:
           rejectionRemark || currentGrievance.rejectionRemark || "",
+
+        lastUpdated: modified
+          ? formatDisplayDate(modified)
+          : currentGrievance.lastUpdated,
+      };
+    });
+
+    /*
+     * Keep timeline modal synchronized
+     * if it happens to be open.
+     */
+
+    setSelectedTimelineGrievance((currentGrievance) => {
+      if (!currentGrievance) {
+        return currentGrievance;
+      }
+
+      if (currentGrievance.id !== grievanceId) {
+        return currentGrievance;
+      }
+
+      return {
+        ...currentGrievance,
+
+        status: statusLabel || currentGrievance.status,
+
+        rejectionRemark:
+          rejectionRemark || currentGrievance.rejectionRemark || "",
+
         lastUpdated: modified
           ? formatDisplayDate(modified)
           : currentGrievance.lastUpdated,
@@ -150,11 +208,9 @@ function AllGrievances() {
     });
   };
 
-  /*
-   * =========================================================
-   * LOAD ALL GRIEVANCES
-   * =========================================================
-   */
+  /* =========================================================
+     LOAD ALL GRIEVANCES
+  ========================================================= */
 
   useEffect(() => {
     let mounted = true;
@@ -205,7 +261,14 @@ function AllGrievances() {
             generatedImageUrl: grievance.generatedImageUrl || null,
 
             rejectionRemark: grievance.rejectionRemark || "",
+
             hospitalName: grievance.creator?.username || "N/A",
+
+            /*
+             * Timeline events returned
+             * directly by GraphQL.
+             */
+            timeline: grievance.timeline || [],
           };
         });
 
@@ -234,11 +297,9 @@ function AllGrievances() {
     };
   }, []);
 
-  /*
-   * =========================================================
-   * HOSPITAL OPTIONS
-   * =========================================================
-   */
+  /* =========================================================
+     HOSPITAL OPTIONS
+  ========================================================= */
 
   const hospitals = useMemo(() => {
     const uniqueHospitals = new Set();
@@ -252,11 +313,9 @@ function AllGrievances() {
     return Array.from(uniqueHospitals).sort((a, b) => a.localeCompare(b));
   }, [grievances]);
 
-  /*
-   * =========================================================
-   * STATUS OPTIONS
-   * =========================================================
-   */
+  /* =========================================================
+     STATUS OPTIONS
+  ========================================================= */
 
   const statuses = useMemo(() => {
     const uniqueStatuses = new Set();
@@ -270,11 +329,9 @@ function AllGrievances() {
     return Array.from(uniqueStatuses).sort((a, b) => a.localeCompare(b));
   }, [grievances]);
 
-  /*
-   * =========================================================
-   * FILTER
-   * =========================================================
-   */
+  /* =========================================================
+     FILTER
+  ========================================================= */
 
   const filteredGrievances = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
@@ -296,6 +353,7 @@ function AllGrievances() {
 
     filtered.sort((first, second) => {
       let firstValue = first[sortConfig.key];
+
       let secondValue = second[sortConfig.key];
 
       if (
@@ -303,12 +361,19 @@ function AllGrievances() {
         sortConfig.key === "lastUpdated"
       ) {
         firstValue = new Date(firstValue);
+
         secondValue = new Date(secondValue);
 
-        if (Number.isNaN(firstValue.getTime())) firstValue = new Date(0);
-        if (Number.isNaN(secondValue.getTime())) secondValue = new Date(0);
+        if (Number.isNaN(firstValue.getTime())) {
+          firstValue = new Date(0);
+        }
+
+        if (Number.isNaN(secondValue.getTime())) {
+          secondValue = new Date(0);
+        }
       } else {
         firstValue = String(firstValue ?? "").toLowerCase();
+
         secondValue = String(secondValue ?? "").toLowerCase();
       }
 
@@ -326,11 +391,9 @@ function AllGrievances() {
     return filtered;
   }, [grievances, searchTerm, selectedHospital, selectedStatus, sortConfig]);
 
-  /*
-   * =========================================================
-   * PAGINATION
-   * =========================================================
-   */
+  /* =========================================================
+     PAGINATION
+  ========================================================= */
 
   const totalPages = Math.max(
     1,
@@ -345,21 +408,24 @@ function AllGrievances() {
 
   const visibleGrievances = filteredGrievances.slice(startIndex, endIndex);
 
+  /* =========================================================
+     SORT
+  ========================================================= */
+
   const handleSort = (key) => {
     setCurrentPage(1);
 
     setSortConfig((current) => ({
       key,
+
       direction:
         current.key === key && current.direction === "asc" ? "desc" : "asc",
     }));
   };
 
-  /*
-   * =========================================================
-   * CLEAR FILTERS
-   * =========================================================
-   */
+  /* =========================================================
+     CLEAR FILTERS
+  ========================================================= */
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -367,6 +433,10 @@ function AllGrievances() {
     setSelectedStatus("all");
     setCurrentPage(1);
   };
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
 
   return (
     <div className="hospital-dashboard">
@@ -404,6 +474,7 @@ function AllGrievances() {
               value={searchTerm}
               onChange={(event) => {
                 setSearchTerm(event.target.value);
+
                 setCurrentPage(1);
               }}
               placeholder="Search by token or title..."
@@ -418,6 +489,7 @@ function AllGrievances() {
                 value={selectedHospital}
                 onChange={(event) => {
                   setSelectedHospital(event.target.value);
+
                   setCurrentPage(1);
                 }}
               >
@@ -440,6 +512,7 @@ function AllGrievances() {
                 value={selectedStatus}
                 onChange={(event) => {
                   setSelectedStatus(event.target.value);
+
                   setCurrentPage(1);
                 }}
               >
@@ -634,15 +707,35 @@ function AllGrievances() {
                     {/* ACTION */}
 
                     <td>
-                      <button
-                        type="button"
-                        className="table-view"
-                        onClick={() => setSelectedGrievance(grievance)}
-                      >
-                        <FiEye size={15} />
+                      <div className="grievance-action-buttons">
+                        {/* NORMAL DETAIL */}
 
-                        <span>View</span>
-                      </button>
+                        <button
+                          type="button"
+                          className="table-view"
+                          onClick={() => setSelectedGrievance(grievance)}
+                          title="View Grievance"
+                        >
+                          <FiEye size={15} />
+
+                          <span>View</span>
+                        </button>
+
+                        {/* TIMELINE */}
+
+                        <button
+                          type="button"
+                          className="timeline-table-button"
+                          onClick={() =>
+                            setSelectedTimelineGrievance(grievance)
+                          }
+                          title="View Timeline"
+                        >
+                          <FiClock size={15} />
+
+                          <span>Timeline</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -664,6 +757,7 @@ function AllGrievances() {
                 value={rowsPerPage}
                 onChange={(event) => {
                   setRowsPerPage(Number(event.target.value));
+
                   setCurrentPage(1);
                 }}
               >
@@ -709,13 +803,24 @@ function AllGrievances() {
       </section>
 
       {/* =====================================================
-          GRIEVANCE MODAL
+          NORMAL GRIEVANCE DETAIL MODAL
       ===================================================== */}
 
       <GrievanceModal
         grievance={selectedGrievance}
         onClose={() => setSelectedGrievance(null)}
         onStatusUpdate={handleStatusUpdate}
+      />
+
+      {/* =====================================================
+          TIMELINE MODAL
+          ADMIN = VIEW ONLY
+      ===================================================== */}
+
+      <GrievanceTimelineModal
+        grievance={selectedTimelineGrievance}
+        onClose={() => setSelectedTimelineGrievance(null)}
+        canEdit={false}
       />
     </div>
   );
