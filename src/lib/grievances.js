@@ -33,9 +33,21 @@ export async function getGrievances(token) {
       }
 
       statusLabel
-      currentImageUrl
-      generatedImageUrl
-      rejectionRemark
+currentImageUrl
+generatedImageUrl
+rejectionRemark
+
+timeline {
+  id
+  eventType
+  title
+  description
+  eta
+  createdAt
+  createdBy
+  createdByName
+  createdByUsername
+}
     }
   }
 }
@@ -271,4 +283,79 @@ export async function updateGrievanceStatus(
   }
 
   return grievance;
+}
+
+export async function addGrievanceProgressUpdate(
+  token,
+  { grievanceId, title, description, eta },
+) {
+  if (!token) {
+    throw new Error("Authentication session not found. Please log in again.");
+  }
+
+  const response = await authenticatedFetch(`${WP_BASE_URL}/graphql`, {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+
+    body: JSON.stringify({
+      query: `
+          mutation AddGrievanceProgressUpdate(
+            $input: AddGrievanceProgressUpdateInput!
+          ) {
+            addGrievanceProgressUpdate(
+              input: $input
+            ) {
+              timelineEvent {
+                id
+                eventType
+                title
+                description
+                eta
+                createdAt
+                createdBy
+                createdByName
+                createdByUsername
+              }
+            }
+          }
+        `,
+
+      variables: {
+        input: {
+          grievanceId: Number(grievanceId),
+          title: title.trim(),
+          description: description?.trim() || "",
+          eta: eta || null,
+        },
+      },
+    }),
+  });
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the progress update response.");
+  }
+
+  if (!response.ok || result?.errors?.length) {
+    throw new Error(
+      result?.errors?.[0]?.message || "Unable to add progress update.",
+    );
+  }
+
+  const timelineEvent = result?.data?.addGrievanceProgressUpdate?.timelineEvent;
+
+  if (!timelineEvent) {
+    throw new Error(
+      "Progress update was created but no timeline event was returned.",
+    );
+  }
+
+  return timelineEvent;
 }

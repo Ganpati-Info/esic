@@ -6115,3 +6115,576 @@ form {
     color 0.2s ease,
     background 0.2s ease;
 }
+
+/* =========================================================
+   GRIEVANCE TIMELINE MODAL
+========================================================= */
+
+.timeline-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.timeline-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.timeline-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.timeline-modal-eyebrow {
+  margin-bottom: 6px;
+  color: #f47216;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.timeline-modal-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.timeline-modal-header p {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.timeline-modal-close,
+.timeline-form-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6b7280;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.timeline-modal-close:hover,
+.timeline-form-close:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+.timeline-modal-close:disabled,
+.timeline-form-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* SUMMARY */
+
+.timeline-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.timeline-summary-item {
+  padding: 14px 18px;
+  background: #f9fafb;
+}
+
+.timeline-summary-item span {
+  display: block;
+  margin-bottom: 4px;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timeline-summary-item strong {
+  display: block;
+  overflow: hidden;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* BODY */
+
+.timeline-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 26px;
+}
+
+.timeline-success,
+.timeline-error {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px;
+  padding: 11px 13px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.timeline-success {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.timeline-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* TIMELINE */
+
+.grievance-timeline {
+  position: relative;
+}
+
+.timeline-event {
+  position: relative;
+  display: flex;
+  gap: 15px;
+  min-height: 90px;
+}
+
+.timeline-event-marker {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #6b7280;
+  box-shadow: 0 0 0 1px #d1d5db;
+}
+
+.timeline-event-line {
+  position: absolute;
+  top: 34px;
+  left: 16px;
+  bottom: 0;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-event-content {
+  flex: 1;
+  padding: 0 0 28px;
+}
+
+.timeline-event-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline-event-top h3 {
+  margin: 1px 0 4px;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.timeline-event-date {
+  display: block;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.timeline-event-description {
+  margin: 10px 0 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.timeline-event-eta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid #fed7aa;
+  border-radius: 7px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 12px;
+}
+
+.timeline-event-author {
+  margin-top: 9px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.timeline-event-badge {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* EVENT TYPES */
+
+.timeline-event.submitted .timeline-event-marker {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.timeline-event.sent-to-esic .timeline-event-marker {
+  background: #fff7ed;
+  color: #ea580c;
+  box-shadow: 0 0 0 1px #fdba74;
+}
+
+.timeline-event.in-progress .timeline-event-marker {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 0 0 1px #93c5fd;
+}
+
+.timeline-event.progress-update .timeline-event-marker {
+  background: #fff7ed;
+  color: #f47216;
+  box-shadow: 0 0 0 1px #fdba74;
+}
+
+.timeline-event.resolved .timeline-event-marker {
+  background: #f0fdf4;
+  color: #16a34a;
+  box-shadow: 0 0 0 1px #86efac;
+}
+
+.timeline-event.rejected .timeline-event-marker {
+  background: #fef2f2;
+  color: #dc2626;
+  box-shadow: 0 0 0 1px #fca5a5;
+}
+
+/* EMPTY */
+
+.timeline-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: #9ca3af;
+}
+
+.timeline-empty p {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+/* ADD PROGRESS */
+
+.timeline-progress-section {
+  margin-top: 4px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.timeline-add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #f47216;
+  border-radius: 8px;
+  background: #f47216;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.timeline-add-button:hover {
+  background: #ea650d;
+  border-color: #ea650d;
+}
+
+.timeline-progress-form {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.timeline-form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.timeline-form-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 15px;
+}
+
+.timeline-form-header p {
+  margin: 5px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.timeline-form-group {
+  margin-bottom: 15px;
+}
+
+.timeline-form-group label {
+  display: block;
+  margin-bottom: 7px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.timeline-form-group label span {
+  margin-left: 3px;
+  color: #dc2626;
+}
+
+.timeline-form-group input,
+.timeline-form-group textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  outline: none;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 13px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.timeline-form-group input:focus,
+.timeline-form-group textarea:focus {
+  border-color: #f47216;
+  box-shadow: 0 0 0 3px rgba(244, 114, 22, 0.1);
+}
+
+.timeline-form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.timeline-form-group input:disabled,
+.timeline-form-group textarea:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.timeline-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.timeline-cancel-button,
+.timeline-save-button,
+.timeline-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timeline-cancel-button {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #4b5563;
+}
+
+.timeline-cancel-button:hover {
+  background: #f9fafb;
+}
+
+.timeline-save-button {
+  border: 1px solid #f47216;
+  background: #f47216;
+  color: #ffffff;
+}
+
+.timeline-save-button:hover {
+  background: #ea650d;
+}
+
+.timeline-save-button:disabled,
+.timeline-cancel-button:disabled,
+.timeline-close-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.timeline-spinner {
+  animation: timeline-spin 0.9s linear infinite;
+}
+
+@keyframes timeline-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* FOOTER */
+
+.timeline-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 26px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.timeline-close-button {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+}
+
+.timeline-close-button:hover {
+  background: #f9fafb;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 700px) {
+  .timeline-modal-overlay {
+    padding: 12px;
+  }
+
+  .timeline-modal {
+    max-height: calc(100vh - 24px);
+  }
+
+  .timeline-modal-header {
+    padding: 18px;
+  }
+
+  .timeline-modal-body {
+    padding: 18px;
+  }
+
+  .timeline-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-summary-item {
+    padding: 11px 18px;
+  }
+
+  .timeline-event-top {
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .timeline-modal-footer {
+    padding: 12px 18px;
+  }
+}
+
+.grievance-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.timeline-table-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #d7dee8;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:    background 0.2s ease,    border-color 0.2s ease,    color 0.2s ease;
+  -webkit-transition:;
+  -moz-transition:;
+  -ms-transition:;
+  -o-transition:;
+}
+
+.timeline-table-button:hover {
+  border-color: #f47216;
+  background: #fff7ed;
+  color: #ea580c;
+}
