@@ -11,6 +11,7 @@ import {
   FiArrowDown,
   FiClock,
   FiChevronDown as FiChevronsUpDown,
+  FiRefreshCw,
 } from "react-icons/fi";
 
 import { getGrievances } from "../../lib/grievances";
@@ -120,6 +121,8 @@ function AllGrievances() {
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  const [refreshKey, setRefreshKey] = useState(0);
 
   /* =========================================================
      STATUS UPDATE
@@ -295,7 +298,7 @@ function AllGrievances() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [refreshKey]);
 
   /* =========================================================
      HOSPITAL OPTIONS
@@ -452,6 +455,20 @@ function AllGrievances() {
 
           <p>View and manage grievances submitted by all hospitals.</p>
         </div>
+
+        <button
+          type="button"
+          className="dashboard-refresh-button"
+          onClick={() => setRefreshKey((current) => current + 1)}
+          disabled={loading}
+        >
+          <FiRefreshCw
+            size={16}
+            className={loading ? "refresh-spinning" : ""}
+          />
+
+          <span>{loading ? "Refreshing..." : "Refresh"}</span>
+        </button>
       </div>
 
       {/* =====================================================
