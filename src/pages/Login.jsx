@@ -243,7 +243,7 @@ function Login() {
                   type="text"
                   value={userId}
                   onChange={(event) => setUserId(event.target.value)}
-                  placeholder="Enter your User ID or Insurance Number"
+                  placeholder="Enter your User ID"
                   autoComplete="username"
                   required
                   disabled={loading}

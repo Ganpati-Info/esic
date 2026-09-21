@@ -9,11 +9,13 @@ import {
   FiPlus,
   FiArrowRight,
   FiInbox,
+  FiEye,
 } from "react-icons/fi";
 
 import { Link } from "react-router-dom";
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
 function StatCard({ icon: Icon, title, value, type }) {
   return (
@@ -89,6 +91,8 @@ function formatDisplayDate(value) {
 function HospitalDashboard({ hospitalName = "ESIC User" }) {
   const [grievances, setGrievances] = useState([]);
   const [selectedGrievance, setSelectedGrievance] = useState(null);
+  const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
+    useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -121,6 +125,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
             image: grievance.currentImageUrl || null,
             generatedImageUrl: grievance.generatedImageUrl || null,
             rejectionRemark: grievance.rejectionRemark || "",
+            timeline: grievance.timeline || [],
           };
         });
 
@@ -319,13 +324,31 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
                     </td>
 
                     <td>
-                      <button
-                        type="button"
-                        className="table-view"
-                        onClick={() => setSelectedGrievance(grievance)}
-                      >
-                        View
-                      </button>
+                      <div className="grievance-action-buttons">
+                        <button
+                          type="button"
+                          className="table-view"
+                          onClick={() => setSelectedGrievance(grievance)}
+                          title="View Grievance"
+                        >
+                          <FiEye size={15} />
+
+                          <span>View</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="timeline-table-button"
+                          onClick={() =>
+                            setSelectedTimelineGrievance(grievance)
+                          }
+                          title="View Timeline"
+                        >
+                          <FiClock size={15} />
+
+                          <span>Timeline</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -338,6 +361,12 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
       {/* GRIEVANCE MODAL */}
 
       <GrievanceModal grievance={selectedGrievance} onClose={closeModal} />
+
+      <GrievanceTimelineModal
+        grievance={selectedTimelineGrievance}
+        onClose={() => setSelectedTimelineGrievance(null)}
+        canEdit={false}
+      />
     </div>
   );
 }

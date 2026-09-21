@@ -8,12 +8,15 @@ import {
   FiUsers,
   FiArrowRight,
   FiInbox,
+  FiRefreshCw,
+  FiEye,
 } from "react-icons/fi";
 
 import { Link } from "react-router-dom";
 
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
 function StatCard({ icon: Icon, title, value, type }) {
   return (
@@ -93,9 +96,14 @@ function AdminDashboard() {
 
   const [selectedGrievance, setSelectedGrievance] = useState(null);
 
+  const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
+    useState(null);
+
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
+
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleStatusUpdate = ({
     grievanceId,
@@ -180,6 +188,8 @@ function AdminDashboard() {
             generatedImageUrl: grievance.generatedImageUrl || null,
 
             rejectionRemark: grievance.rejectionRemark || "",
+
+            timeline: grievance.timeline || [],
           };
         });
 
@@ -194,7 +204,7 @@ function AdminDashboard() {
     }
 
     loadGrievances();
-  }, []);
+  }, [refreshKey]);
 
   const totalGrievances = grievances.length;
 
@@ -236,6 +246,20 @@ function AdminDashboard() {
 
           <p>Monitor and manage grievances submitted by hospitals.</p>
         </div>
+
+        <button
+          type="button"
+          className="dashboard-refresh-button"
+          onClick={() => setRefreshKey((current) => current + 1)}
+          disabled={loading}
+        >
+          <FiRefreshCw
+            size={16}
+            className={loading ? "refresh-spinning" : ""}
+          />
+
+          <span>{loading ? "Refreshing..." : "Refresh"}</span>
+        </button>
       </div>
 
       {/* STATISTICS */}
@@ -375,13 +399,31 @@ function AdminDashboard() {
                     </td>
 
                     <td>
-                      <button
-                        type="button"
-                        className="table-view"
-                        onClick={() => setSelectedGrievance(grievance)}
-                      >
-                        View
-                      </button>
+                      <div className="grievance-action-buttons">
+                        <button
+                          type="button"
+                          className="table-view"
+                          onClick={() => setSelectedGrievance(grievance)}
+                          title="View Grievance"
+                        >
+                          <FiEye size={15} />
+
+                          <span>View</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="timeline-table-button"
+                          onClick={() =>
+                            setSelectedTimelineGrievance(grievance)
+                          }
+                          title="View Timeline"
+                        >
+                          <FiClock size={15} />
+
+                          <span>Timeline</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -397,6 +439,12 @@ function AdminDashboard() {
         grievance={selectedGrievance}
         onClose={() => setSelectedGrievance(null)}
         onStatusUpdate={handleStatusUpdate}
+      />
+
+      <GrievanceTimelineModal
+        grievance={selectedTimelineGrievance}
+        onClose={() => setSelectedTimelineGrievance(null)}
+        canEdit={false}
       />
     </div>
   );
