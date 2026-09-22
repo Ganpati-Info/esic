@@ -233,11 +233,11 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
         />
 
         <StatCard
-                  icon={HiOutlineOfficeBuilding}
-                  title="Sent to ESIC"
-                  value={loading ? "—" : sentToEsicCount}
-                  type="sent-to-esic"
-                />
+          icon={HiOutlineOfficeBuilding}
+          title="Sent to ESIC"
+          value={loading ? "—" : sentToEsicCount}
+          type="sent-to-esic"
+        />
       </div>
       <div
         className="director-esic-summary"
@@ -285,7 +285,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="table-message">
-                    Loading grievances...
+                    Loading complaints, please wait...
                   </td>
                 </tr>
               ) : error ? (

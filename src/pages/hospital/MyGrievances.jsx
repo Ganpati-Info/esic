@@ -547,7 +547,7 @@ function MyGrievances() {
                       <FiFileText size={24} />
                     </div>
 
-                    <h3>Loading grievances...</h3>
+                    <h3>Loading complaints, please wait...</h3>
 
                     <p>Fetching the latest grievance records.</p>
                   </td>

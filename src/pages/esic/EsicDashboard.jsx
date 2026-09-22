@@ -368,7 +368,7 @@ function EsicDashboard() {
 
         {loading ? (
           <div className="dashboard-empty-state">
-            <span>Loading grievances...</span>
+            <span>Loading complaints, please wait...</span>
           </div>
         ) : recentGrievances.length === 0 ? (
           <div className="dashboard-empty-state">

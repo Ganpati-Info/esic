@@ -256,9 +256,9 @@ function AdminDashboard() {
         <div className="dashboard-title-content">
           <div className="dashboard-eyebrow">DIRECTOR MODULE</div>
 
-          <h1>Grievance Dashboard</h1>
+          <h1>Complaint redressal Dashboard</h1>
 
-          <p>Monitor and manage grievances submitted by hospitals.</p>
+          <p>Monitor and manage complaints submitted by hospitals.</p>
         </div>
 
         <button
@@ -357,7 +357,7 @@ function AdminDashboard() {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="table-message">
-                    Loading grievances...
+                    Loading complaints, please wait...
                   </td>
                 </tr>
               ) : error ? (
