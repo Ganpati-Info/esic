@@ -123,12 +123,12 @@ function CreateGrievance() {
     setSubmitError("");
 
     if (!title.trim()) {
-      setSubmitError("Please enter a grievance title first.");
+      setSubmitError("Please enter a complaint title first.");
       return;
     }
 
     if (!description.trim()) {
-      setSubmitError("Please enter a grievance description first.");
+      setSubmitError("Please enter a complaint description first.");
       return;
     }
 
@@ -158,6 +158,7 @@ function CreateGrievance() {
        * If it was already uploaded during a previous
        * generation attempt, reuse the existing media.
        */
+
       let uploadedMedia = currentMedia;
 
       if (!uploadedMedia) {
@@ -175,6 +176,7 @@ function CreateGrievance() {
        * Send title, description and WordPress image URL
        * to the AI image generation service.
        */
+
       const aiResponse = await fetch(
         "https://esicimagegen.vercel.app/api/generate-reference",
         {
@@ -218,6 +220,7 @@ function CreateGrievance() {
        * STEP 3
        * Convert the AI data URL into a File.
        */
+
       const generatedFile = await dataUrlToFile(
         aiData.generatedImage,
         `ai-reference-${Date.now()}.png`,
@@ -227,6 +230,7 @@ function CreateGrievance() {
        * STEP 4
        * Upload the generated AI image to WordPress.
        */
+
       const generatedMediaUpload = await uploadMedia(token, generatedFile);
 
       console.log("GENERATED MEDIA UPLOAD:", generatedMediaUpload);
@@ -237,12 +241,14 @@ function CreateGrievance() {
        *
        * This ID will later be passed to createGrievance().
        */
+
       setGeneratedMedia(generatedMediaUpload);
 
       /*
        * STEP 6
        * Show the generated image in the UI.
        */
+
       setGeneratedImage(aiData.generatedImage);
       setHasGeneratedImage(true);
 
@@ -274,12 +280,12 @@ function CreateGrievance() {
     setSubmitError("");
 
     if (!title.trim()) {
-      setSubmitError("Please enter a grievance title.");
+      setSubmitError("Please enter a complaint title.");
       return;
     }
 
     if (!description.trim()) {
-      setSubmitError("Please enter a grievance description.");
+      setSubmitError("Please enter a complaint description.");
       return;
     }
 
@@ -307,6 +313,7 @@ function CreateGrievance() {
        * If AI generation already uploaded it, reuse it.
        * Otherwise upload it now.
        */
+
       let uploadedMedia = currentMedia;
 
       if (!uploadedMedia) {
@@ -326,6 +333,7 @@ function CreateGrievance() {
        * currentImageId = original evidence image
        * generatedImageId = AI repaired-condition image
        */
+
       const grievance = await createGrievance(token, {
         title: title.trim(),
         description: description.trim(),
@@ -346,6 +354,7 @@ function CreateGrievance() {
        * STEP 3
        * Go back to grievance list.
        */
+
       navigate("/hospital/grievances");
     } catch (error) {
       console.error("CREATE GRIEVANCE ERROR:", error);
@@ -368,7 +377,7 @@ function CreateGrievance() {
         <div>
           <div className="create-page-eyebrow">HOSPITAL MODULE</div>
 
-          <h1>Create Grievance</h1>
+          <h1>Create Complaint</h1>
 
           <p>Report a hospital infrastructure or facility issue.</p>
         </div>
@@ -380,7 +389,7 @@ function CreateGrievance() {
         <section className="create-form-card">
           <div className="form-card-header">
             <div>
-              <h2>Grievance Details</h2>
+              <h2>Complaint Details</h2>
 
               <p>Provide details about the issue you want to report.</p>
             </div>
@@ -391,7 +400,7 @@ function CreateGrievance() {
 
             <div className="form-group">
               <label htmlFor="grievance-title">
-                Grievance Title
+                Complaint Title
                 <span>*</span>
               </label>
 
@@ -400,7 +409,7 @@ function CreateGrievance() {
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Enter grievance title"
+                placeholder="Enter complaint title"
                 maxLength={150}
               />
 
@@ -413,7 +422,7 @@ function CreateGrievance() {
 
             <div className="form-group">
               <label htmlFor="grievance-description">
-                Grievance Description
+                Complaint Description
                 <span>*</span>
               </label>
 
@@ -542,35 +551,86 @@ function CreateGrievance() {
             <div className="ai-result">
               <div className="ai-result-header">
                 <div>
-                  <h3>Generated Reference</h3>
+                  <h3>Before &amp; After Reference</h3>
 
                   <p>
-                    {hasGeneratedImage
-                      ? "Generated image preview is ready."
-                      : "The generated image will appear here."}
+                    Compare the reported condition with the expected outcome.
                   </p>
                 </div>
               </div>
 
-              <div className="ai-image-wrapper">
-                {generatedImage ? (
-                  <img
-                    src={generatedImage}
-                    alt="AI generated repaired condition reference"
-                    className="ai-generated-image"
-                  />
-                ) : (
-                  <div className="ai-image-placeholder">
-                    <RiSparkling2Fill size={30} />
+              <div className="ai-comparison-grid">
+                {/* BEFORE */}
 
-                    <span>
-                      {isGenerating
-                        ? "Generating repaired-condition reference..."
-                        : "Generate an image to preview it here"}
-                    </span>
+                <div className="ai-comparison-card">
+                  <div className="ai-comparison-header">
+                    <div>
+                      <h4>Before</h4>
+
+                      <p>Current Condition</p>
+                    </div>
                   </div>
-                )}
+
+                  <div className="ai-comparison-image-wrapper">
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Current condition"
+                        className="ai-comparison-image"
+                      />
+                    ) : (
+                      <div className="ai-comparison-placeholder">
+                        <FiImage size={30} />
+
+                        <span>Upload an evidence image to preview it here</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* AFTER */}
+
+                <div className="ai-comparison-card">
+                  <div className="ai-comparison-header">
+                    <div>
+                      <h4>After</h4>
+
+                      <p>Expected After Repair</p>
+                    </div>
+                  </div>
+
+                  <div className="ai-comparison-image-wrapper">
+                    {generatedImage ? (
+                      <img
+                        src={generatedImage}
+                        alt="Expected repaired condition"
+                        className="ai-comparison-image"
+                      />
+                    ) : (
+                      <div className="ai-comparison-placeholder">
+                        <RiSparkling2Fill size={30} />
+
+                        <span>
+                          {isGenerating
+                            ? "Generating repaired-condition reference..."
+                            : "Generate an image to preview it here"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
+
+              {hasGeneratedImage && (
+                <div className="ai-comparison-note">
+                  <RiSparkling2Fill size={15} />
+
+                  <span>
+                    The right image is an AI-generated visual reference showing
+                    the expected condition after repair.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -598,7 +658,7 @@ function CreateGrievance() {
           >
             <FiSend size={17} />
 
-            {isSubmitting ? "Submitting..." : "Submit Grievance"}
+            {isSubmitting ? "Submitting..." : "Submit Complaint"}
           </button>
         </div>
       </form>

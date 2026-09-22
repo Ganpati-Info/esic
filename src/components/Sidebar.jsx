@@ -102,7 +102,7 @@ function Sidebar({
             >
               <FiFileText size={19} />
 
-              <span>All Grievances</span>
+              <span>All Complaints</span>
             </button>
           )}
 
@@ -123,7 +123,7 @@ function Sidebar({
               >
                 <FiPlusCircle size={19} />
 
-                <span>Create Grievance</span>
+                <span>Create Complaints</span>
               </button>
 
               <button
@@ -137,7 +137,7 @@ function Sidebar({
               >
                 <FiFileText size={19} />
 
-                <span>My Grievances</span>
+                <span>My Complaints</span>
               </button>
             </>
           )}

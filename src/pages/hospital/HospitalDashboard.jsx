@@ -62,6 +62,16 @@ function normalizeStatus(status) {
   }
 }
 
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
+}
+
 function getStatusClass(status) {
   if (!status) {
     return "";
@@ -180,7 +190,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
           <h1>{hospitalName}</h1>
 
           <p>
-            Manage and track hospital infrastructure and facility grievances.
+            Manage and track hospital infrastructure and facility complaints.
           </p>
         </div>
 
@@ -199,7 +209,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
       <div className="hospital-stats">
         <StatCard
           icon={FiFileText}
-          title="Total Grievances"
+          title="Total Complaints"
           value={loading ? "—" : totalGrievances}
           type="total"
         />
@@ -213,7 +223,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
 
         <StatCard
           icon={FiCheckCircle}
-          title="Resolved"
+          title="Completed"
           value={loading ? "—" : resolvedCount}
           type="resolved"
         />
@@ -239,27 +249,12 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
           type="sent-to-esic"
         />
       </div>
-      <div
-        className="director-esic-summary"
-        style={{
-          marginTop: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        <div>
-          <strong>Sent to ESIC</strong>
-
-          <span>Grievances sent to ESIC for further action</span>
-        </div>
-
-        <strong>{loading ? "—" : sentToEsicCount}</strong>
-      </div>
 
       {/* RECENT GRIEVANCES */}
 
       <section className="grievances-card">
         <div className="section-header">
-          <h2>Recent Grievances</h2>
+          <h2>Recent Complaints</h2>
 
           <Link to="/hospital/grievances" className="view-all">
             <span>View All</span>
@@ -303,10 +298,10 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
                       </div>
 
                       <div className="empty-grievances-copy">
-                        <strong>No grievances yet</strong>
+                        <strong>No complaints yet</strong>
 
                         <span>
-                          Submit your first grievance to start tracking it here.
+                          Submit your first complaint to start tracking it here.
                         </span>
                       </div>
                     </div>
@@ -327,7 +322,7 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 

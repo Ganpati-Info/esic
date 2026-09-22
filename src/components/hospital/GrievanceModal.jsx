@@ -47,6 +47,15 @@ function getStatusLabel(status, role) {
   if (role === "portal_super_admin" && normalizedStatus === "pending") {
     return "Pending Approval";
   }
+  if (role === "esic_user" && normalizedStatus === "sent to esic") {
+    return "Pending";
+  }
+  if (role === "esic_user" && normalizedStatus === "resolved") {
+    return "Completed";
+  }
+  if (role === "hospital_user" && normalizedStatus === "resolved") {
+    return "Completed";
+  }
 
   switch (normalizedStatus) {
     case "pending":

@@ -53,6 +53,20 @@ function normalizeStatus(status) {
   }
 }
 
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Sent to ESIC") {
+    return "Pending";
+  }
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
+}
+
 /* =========================================================
    STATUS CLASS
 ========================================================= */
@@ -486,9 +500,9 @@ function EsicGrievances() {
         <div className="dashboard-title-content">
           <div className="dashboard-eyebrow">ESIC MODULE</div>
 
-          <h1>ESIC Grievances</h1>
+          <h1>ESIC Complaints</h1>
 
-          <p>View and manage grievances delegated to ESIC.</p>
+          <p>View and manage complaints delegated to ESIC.</p>
         </div>
 
         <button
@@ -574,7 +588,7 @@ function EsicGrievances() {
 
                 {statuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {getSuperAdminStatusLabel(status)}
                   </option>
                 ))}
               </select>
@@ -593,11 +607,11 @@ function EsicGrievances() {
             {loading
               ? "Loading complaints, please wait..."
               : filteredGrievances.length === 0
-                ? "No grievances found"
+                ? "No complaints found"
                 : `Showing ${startIndex + 1}-${Math.min(
                     endIndex,
                     filteredGrievances.length,
-                  )} of ${filteredGrievances.length} grievances`}
+                  )} of ${filteredGrievances.length} complaints`}
           </span>
 
           {!loading &&
@@ -650,7 +664,7 @@ function EsicGrievances() {
                     onClick={() => handleSort("title")}
                     className="sort-button"
                   >
-                    Grievance Title
+                    Complaint Title
                     <SortIcon column="title" sortConfig={sortConfig} />
                   </button>
                 </th>
@@ -720,10 +734,10 @@ function EsicGrievances() {
                       </div>
 
                       <div className="empty-grievances-copy">
-                        <strong>No grievances found</strong>
+                        <strong>No complaints found</strong>
 
                         <span>
-                          There are currently no grievances available for ESIC.
+                          There are currently no complaints available for ESIC.
                         </span>
                       </div>
                     </div>
@@ -764,7 +778,7 @@ function EsicGrievances() {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 

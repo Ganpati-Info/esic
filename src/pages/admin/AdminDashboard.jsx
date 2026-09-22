@@ -281,7 +281,7 @@ function AdminDashboard() {
       <div className="hospital-stats">
         <StatCard
           icon={FiFileText}
-          title="Total Grievances"
+          title="Total Complaints"
           value={loading ? "—" : totalGrievances}
           type="total"
         />
