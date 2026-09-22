@@ -568,7 +568,7 @@ function AllGrievances() {
         <div className="admin-results-bar">
           <span>
             {loading
-              ? "Loading grievances..."
+              ? "Loading complaints, please wait..."
               : filteredGrievances.length === 0
                 ? "No grievances found"
                 : `Showing ${startIndex + 1}-${Math.min(
@@ -673,7 +673,7 @@ function AllGrievances() {
               {loading ? (
                 <tr>
                   <td colSpan="7" className="table-message">
-                    Loading grievances...
+                    Loading complaints, please wait...
                   </td>
                 </tr>
               ) : error ? (
