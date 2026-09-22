@@ -375,9 +375,9 @@ function AdminDashboard() {
                       </div>
 
                       <div className="empty-grievances-copy">
-                        <strong>No grievances yet</strong>
+                        <strong>No complaints yet</strong>
 
-                        <span>Hospital grievances will appear here.</span>
+                        <span>Hospital complaints will appear here.</span>
                       </div>
                     </div>
                   </td>
