@@ -47,6 +47,19 @@ function normalizeStatus(status) {
   }
 }
 
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Sent to ESIC") {
+    return "Pending";
+  }
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
+}
 /* =========================================================
    DATE FORMATTER
 ========================================================= */
@@ -252,7 +265,7 @@ function EsicDashboard() {
         <div className="dashboard-title-content">
           <div className="dashboard-eyebrow">ESIC MODULE</div>
 
-          <h1>ESIC Dashboard</h1>
+          <h1>ESIC Agency Dashboard</h1>
 
           <p>
             Manage grievances delegated to ESIC and monitor their resolution
@@ -314,7 +327,7 @@ function EsicDashboard() {
           </div>
 
           <div className="dashboard-stat-content">
-            <span className="dashboard-stat-label">Sent to ESIC</span>
+            <span className="dashboard-stat-label">Pending</span>
 
             <strong>{loading ? "—" : counts.sentToEsic}</strong>
           </div>
@@ -342,7 +355,7 @@ function EsicDashboard() {
           </div>
 
           <div className="dashboard-stat-content">
-            <span className="dashboard-stat-label">Resolved</span>
+            <span className="dashboard-stat-label">Completed</span>
 
             <strong>{loading ? "—" : counts.resolved}</strong>
           </div>
@@ -413,7 +426,7 @@ function EsicDashboard() {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 

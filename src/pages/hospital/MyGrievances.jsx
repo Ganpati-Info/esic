@@ -46,6 +46,16 @@ function normalizeStatus(status) {
   }
 }
 
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
+}
+
 function getStatusClass(status) {
   if (!status) {
     return "";
@@ -134,7 +144,7 @@ function MyGrievances() {
 
             tokenNo: details.tokenNumber || "N/A",
 
-            title: grievance.title || "Untitled Grievance",
+            title: grievance.title || "Untitled Complaint",
 
             submittedOn: formatDisplayDate(grievance.date),
 
@@ -394,9 +404,9 @@ function MyGrievances() {
         <div>
           <div className="my-grievances-eyebrow">HOSPITAL MODULE</div>
 
-          <h1>My Grievances</h1>
+          <h1>My Complaints</h1>
 
-          <p>View, search and track grievances submitted by your hospital.</p>
+          <p>View, search and track complaints submitted by your hospital.</p>
         </div>
       </div>
 
@@ -446,7 +456,7 @@ function MyGrievances() {
 
               <option value="In Progress">In Progress</option>
 
-              <option value="Resolved">Resolved</option>
+              <option value="Resolved">Completed</option>
 
               <option value="Rejected">Rejected</option>
 
@@ -468,7 +478,7 @@ function MyGrievances() {
               {filteredGrievances.length === 0 ? 0 : startIndex + 1}-
               {Math.min(endIndex, filteredGrievances.length)}
             </strong>{" "}
-            of <strong>{filteredGrievances.length}</strong> grievances
+            of <strong>{filteredGrievances.length}</strong> complaints
           </span>
         </div>
 
@@ -497,7 +507,7 @@ function MyGrievances() {
                     onClick={() => handleSort("title")}
                     className="sort-button"
                   >
-                    Grievance Title
+                    Complaint Title
                     <SortIcon column="title" />
                   </button>
                 </th>
@@ -542,26 +552,30 @@ function MyGrievances() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="empty-grievances">
-                    <div className="empty-icon">
-                      <FiFileText size={24} />
+                  <td colSpan="6" className="empty-grievances-cell">
+                    <div className="empty-grievances">
+                      <div className="empty-icon">
+                        <FiFileText size={24} />
+                      </div>
+
+                      <h3>Loading complaints, please wait...</h3>
+
+                      <p>Fetching the latest complaint records.</p>
                     </div>
-
-                    <h3>Loading complaints, please wait...</h3>
-
-                    <p>Fetching the latest grievance records.</p>
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="6" className="empty-grievances">
-                    <div className="empty-icon">
-                      <FiFileText size={24} />
+                  <td colSpan="6" className="empty-grievances-cell">
+                    <div className="empty-grievances">
+                      <div className="empty-icon">
+                        <FiFileText size={24} />
+                      </div>
+
+                      <h3>Unable to load complaints</h3>
+
+                      <p>{error}</p>
                     </div>
-
-                    <h3>Unable to load grievances</h3>
-
-                    <p>{error}</p>
                   </td>
                 </tr>
               ) : paginatedGrievances.length > 0 ? (
@@ -579,7 +593,7 @@ function MyGrievances() {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 
@@ -618,14 +632,16 @@ function MyGrievances() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="empty-grievances">
-                    <div className="empty-icon">
-                      <FiFileText size={24} />
+                  <td colSpan="6" className="empty-grievances-cell">
+                    <div className="empty-grievances">
+                      <div className="empty-icon">
+                        <FiFileText size={24} />
+                      </div>
+
+                      <h3>No complaints found</h3>
+
+                      <p>Try changing your search or filter.</p>
                     </div>
-
-                    <h3>No grievances found</h3>
-
-                    <p>Try changing your search or filter.</p>
                   </td>
                 </tr>
               )}
