@@ -41,8 +41,14 @@ function normalizeStatus(status) {
   }
 }
 
-function getStatusLabel(status) {
-  switch (normalizeStatus(status)) {
+function getStatusLabel(status, role) {
+  const normalizedStatus = normalizeStatus(status);
+
+  if (role === "portal_super_admin" && normalizedStatus === "pending") {
+    return "Pending Approval";
+  }
+
+  switch (normalizedStatus) {
     case "pending":
       return "Sent to Director";
 
@@ -125,7 +131,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
   );
 
   const [currentStatusLabel, setCurrentStatusLabel] = useState(
-    getStatusLabel(grievance?.status),
+    getStatusLabel(grievance?.status, currentUser?.role),
   );
 
   const [currentRejectionRemark, setCurrentRejectionRemark] = useState(
@@ -153,7 +159,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
     setCurrentStatus(normalizeStatus(grievance.status));
 
-    setCurrentStatusLabel(getStatusLabel(grievance.status));
+    setCurrentStatusLabel(getStatusLabel(grievance.status, currentUser?.role));
 
     setCurrentRejectionRemark(grievance.rejectionRemark || "");
 
@@ -185,9 +191,6 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
   const canMarkInProgress = isEsicOfficer && currentStatus === "sent to esic";
 
   const canResolve = isEsicOfficer && currentStatus === "in progress";
-
-  const hasWorkflowActions =
-    canReject || canSendToEsic || canMarkInProgress || canResolve;
 
   const handleOpenRejectionModal = () => {
     setPendingRejectionRemark(currentRejectionRemark || "");
@@ -245,6 +248,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
       const updatedStatusLabel = getStatusLabel(
         updatedGrievance?.statusLabel || updatedStatus,
+        currentUser?.role,
       );
 
       setCurrentStatus(updatedStatus);
@@ -524,6 +528,8 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                   <span>Reject</span>
                 </button>
               )}
+
+              {/* instead of send to esic, it should be "send back to hospital" button */}
 
               {canSendToEsic && (
                 <button
