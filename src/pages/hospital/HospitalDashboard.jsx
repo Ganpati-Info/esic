@@ -11,6 +11,7 @@ import {
   FiInbox,
   FiEye,
 } from "react-icons/fi";
+import { HiOutlineOfficeBuilding } from "react-icons/hi";
 
 import { Link } from "react-router-dom";
 import { getGrievances } from "../../lib/grievances";
@@ -230,6 +231,13 @@ function HospitalDashboard({ hospitalName = "ESIC User" }) {
           value={loading ? "—" : inProgressCount}
           type="in-progress"
         />
+
+        <StatCard
+                  icon={HiOutlineOfficeBuilding}
+                  title="Sent to ESIC"
+                  value={loading ? "—" : sentToEsicCount}
+                  type="sent-to-esic"
+                />
       </div>
       <div
         className="director-esic-summary"

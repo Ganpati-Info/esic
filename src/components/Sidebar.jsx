@@ -25,19 +25,13 @@ function Sidebar({
 
       <div className="sidebar-brand">
         <div className="sidebar-logo">
-          <img src="/esic-logo.png" alt="ESIC" />
+          <img src="/emblem-of-india.png" alt="ESIC" />
         </div>
 
         <div className="sidebar-brand-text">
           <div className="sidebar-brand-title">ESI(MB)</div>
 
-          <div className="sidebar-brand-subtitle">Grievance Portal</div>
-
-          <div className="sidebar-brand-org">
-            Employees' State Insurance
-            <br />
-            Corporation
-          </div>
+          <div className="sidebar-brand-subtitle">Complaint Portal</div>
         </div>
       </div>
 

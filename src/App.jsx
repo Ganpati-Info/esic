@@ -125,7 +125,7 @@ function HospitalLayout() {
 
   const currentUser = getStoredUser();
 
-  const hospitalName = currentUser?.name || "ESIC User";
+  const hospitalName = currentUser?.name;
 
   const activeItems = {
     "/hospital/dashboard": "Dashboard",
@@ -256,7 +256,7 @@ function EsicLayout() {
 
   const currentUser = getStoredUser();
 
-  const esicName = currentUser?.name || "ESIC Officer";
+  const esicName = currentUser?.name || "ESIC";
 
   /*
    * IMPORTANT:

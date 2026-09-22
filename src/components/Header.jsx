@@ -28,9 +28,9 @@ function Header() {
 
       <div className="government-mark">
         <div className="government-text">
-          <div className="gov-hindi">भारत सरकार</div>
+          <div className="gov-hindi">পশ্চিমবঙ্গ সরকার</div>
 
-          <div className="gov-english">Government of India</div>
+          <div className="gov-english">Government of West Bengal</div>
         </div>
 
         <img

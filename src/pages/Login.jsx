@@ -159,7 +159,7 @@ function Login() {
           <div className="hero-line" />
 
           <h1>
-            ESIC <span>Grievance</span> Portal
+            ESI(MB) <span>Complaint</span> Redressal Portal
           </h1>
 
           <p className="hero-description">
@@ -175,7 +175,7 @@ function Login() {
                 <>
                   Raise
                   <br />
-                  Grievance
+                  Complaints
                 </>
               }
               description={
