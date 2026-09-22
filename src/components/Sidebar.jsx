@@ -62,7 +62,7 @@ function Sidebar({
 
         <div className="sidebar-section">
           <div className="sidebar-section-title">
-            Grievances
+            Complaints
             <FiChevronDown size={17} />
           </div>
 
@@ -82,7 +82,7 @@ function Sidebar({
             >
               <FiFileText size={19} />
 
-              <span>All Grievances</span>
+              <span>All Complaints</span>
             </button>
           )}
 

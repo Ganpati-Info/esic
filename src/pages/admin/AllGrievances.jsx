@@ -291,14 +291,14 @@ function AllGrievances() {
 
         setGrievances(formatted);
       } catch (err) {
-        console.error("Failed to load all grievances:", err);
+        console.error("Failed to load all complaints:", err);
 
         if (!mounted) {
           return;
         }
 
         setError(
-          err?.message || "Unable to load grievances. Please try again.",
+          err?.message || "Unable to load complaints. Please try again.",
         );
       } finally {
         if (mounted) {
@@ -465,9 +465,9 @@ function AllGrievances() {
         <div className="dashboard-title-content">
           <div className="dashboard-eyebrow">DIRECTOR MODULE</div>
 
-          <h1>All Grievances</h1>
+          <h1>All Complaints</h1>
 
-          <p>View and manage grievances submitted by all hospitals.</p>
+          <p>View and manage complaints submitted by all hospitals.</p>
         </div>
 
         <button
@@ -570,11 +570,11 @@ function AllGrievances() {
             {loading
               ? "Loading complaints, please wait..."
               : filteredGrievances.length === 0
-                ? "No grievances found"
+                ? "No complaints found"
                 : `Showing ${startIndex + 1}-${Math.min(
                     endIndex,
                     filteredGrievances.length,
-                  )} of ${filteredGrievances.length} grievances`}
+                  )} of ${filteredGrievances.length} complaints`}
           </span>
 
           {!loading &&
@@ -691,7 +691,7 @@ function AllGrievances() {
                       </div>
 
                       <div className="empty-grievances-copy">
-                        <strong>No grievances found</strong>
+                        <strong>No complaints found</strong>
 
                         <span>Try changing your search or filters.</span>
                       </div>
