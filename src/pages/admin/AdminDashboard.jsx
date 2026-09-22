@@ -11,7 +11,7 @@ import {
   FiRefreshCw,
   FiEye,
 } from "react-icons/fi";
-
+import { HiOutlineOfficeBuilding } from "react-icons/hi";
 import { Link } from "react-router-dom";
 
 import { getGrievances } from "../../lib/grievances";
@@ -60,6 +60,20 @@ function normalizeStatus(status) {
     default:
       return String(status || "").trim();
   }
+}
+
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Sent to Director") {
+    return "Pending Approval";
+  }
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
 }
 
 function getStatusClass(status) {
@@ -274,7 +288,7 @@ function AdminDashboard() {
 
         <StatCard
           icon={FiClock}
-          title="Sent to Director"
+          title="Pending Approval"
           value={loading ? "—" : sentToDirectorCount}
           type="pending"
         />
@@ -288,7 +302,7 @@ function AdminDashboard() {
 
         <StatCard
           icon={FiCheckCircle}
-          title="Resolved"
+          title="Completed"
           value={loading ? "—" : resolvedCount}
           type="resolved"
         />
@@ -299,24 +313,13 @@ function AdminDashboard() {
           value={loading ? "—" : rejectedCount}
           type="rejected"
         />
-      </div>
 
-      {/* SENT TO ESIC SUMMARY */}
-
-      <div
-        className="director-esic-summary"
-        style={{
-          marginTop: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        <div>
-          <strong>Sent to ESIC</strong>
-
-          <span>Grievances sent to ESIC for further action</span>
-        </div>
-
-        <strong>{loading ? "—" : sentToEsicCount}</strong>
+        <StatCard
+          icon={HiOutlineOfficeBuilding}
+          title="Sent to ESIC"
+          value={loading ? "—" : sentToEsicCount}
+          type="sent-to-esic"
+        />
       </div>
 
       {/* RECENT GRIEVANCES */}
@@ -394,7 +397,7 @@ function AdminDashboard() {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 

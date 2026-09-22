@@ -46,6 +46,20 @@ function normalizeStatus(status) {
   }
 }
 
+function getSuperAdminStatusLabel(status) {
+  const normalized = normalizeStatus(status);
+
+  if (normalized === "Sent to Director") {
+    return "Pending Approval";
+  }
+
+  if (normalized === "Resolved") {
+    return "Completed";
+  }
+
+  return normalized;
+}
+
 function getStatusClass(status) {
   if (!status) {
     return "";
@@ -537,7 +551,7 @@ function AllGrievances() {
 
                 {statuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {getSuperAdminStatusLabel(status)}
                   </option>
                 ))}
               </select>
@@ -717,7 +731,7 @@ function AllGrievances() {
                       <span
                         className={`status ${getStatusClass(grievance.status)}`}
                       >
-                        {grievance.status}
+                        {getSuperAdminStatusLabel(grievance.status)}
                       </span>
                     </td>
 
