@@ -183,6 +183,8 @@ function MyGrievances() {
 
             title: grievance.title || "Untitled Complaint",
 
+            priority: Boolean(grievance.priority),
+
             submittedOn: formatDisplayDate(grievance.date),
 
             lastUpdated: formatDisplayDate(grievance.modified),

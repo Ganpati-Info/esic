@@ -221,7 +221,7 @@ function Login() {
           <div className="login-heading">
             <h2>Welcome Back</h2>
 
-            <p>Login to ESIC Grievance Portal</p>
+            <p>Login to ESI(MB) Complaint Redressal Portal</p>
           </div>
 
           <form className="login-form" onSubmit={handleLogin}>

@@ -22,7 +22,7 @@ function SessionExpiredModal({ open, onLogin }) {
 
           <p>
             Your login session has expired. Please login again to continue using
-            the ESIC Grievance Portal.
+            the ESIC Complaint Redressal Portal.
           </p>
         </div>
 

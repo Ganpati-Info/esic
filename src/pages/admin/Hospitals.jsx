@@ -214,8 +214,7 @@ async function loadHospitals() {
           <h1>Hospitals</h1>
 
           <p>
-            Manage and view all hospitals connected to the ESIC Grievance
-            Portal.
+            Manage and view all hospitals connected to the ESIC Complaint Redressal Portal.
           </p>
         </div>
 

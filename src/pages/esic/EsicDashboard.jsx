@@ -369,7 +369,7 @@ function EsicDashboard() {
       <section className="dashboard-card esic-recent-card">
         <div className="dashboard-card-header">
           <div className="section-header">
-            <h2>Recent Grievances</h2>
+            <h2>Recent Complaints</h2>
 
             <Link to="/esic/grievances" className="view-all">
               <span>View All</span>
@@ -398,7 +398,7 @@ function EsicDashboard() {
                 <tr>
                   <th>Token No.</th>
                   <th>Hospital</th>
-                  <th>Grievance Title</th>
+                  <th>Complaint Title</th>
                   <th>Status</th>
                   <th>Last Updated</th>
                   <th>Action</th>

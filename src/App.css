@@ -7549,3 +7549,28 @@ form {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.priority-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.priority-star:hover {
+  color: #F47216;
+}
+
+.priority-star.active {
+  color: #F47216;
+}
+
+.priority-star:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
