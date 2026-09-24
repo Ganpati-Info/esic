@@ -15,6 +15,10 @@ import {
 
 import { LuArrowUpDown } from "react-icons/lu";
 
+import { FaRegFilePdf, FaRegFileExcel } from "react-icons/fa";
+
+import { exportGrievances } from "../../lib/export";
+
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
 import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
@@ -264,6 +268,16 @@ function EsicGrievances() {
   useEffect(() => {
     loadGrievances();
   }, []);
+
+  async function handleExport(format) {
+    try {
+      await exportGrievances(filteredGrievances, format, "ESIC-Complaint");
+    } catch (err) {
+      console.error("ESIC complaint export failed:", err);
+
+      setError(err.message || "Unable to export complaint.");
+    }
+  }
 
   /* =========================================================
      STATUS UPDATE
@@ -545,6 +559,32 @@ function EsicGrievances() {
               }}
               placeholder="Search by token, title or hospital..."
             />
+          </div>
+
+          <div className="export-actions">
+            <span className="export-label">Export as:</span>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("pdf")}
+              title="Export as PDF"
+            >
+              <FaRegFilePdf />
+
+              <span>PDF</span>
+            </button>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("excel")}
+              title="Export as Excel"
+            >
+              <FaRegFileExcel />
+
+              <span>Excel</span>
+            </button>
           </div>
 
           {/* FILTERS */}

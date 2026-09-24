@@ -4,6 +4,7 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiEdit3,
+  FiPrinter,
   FiSend,
   FiX,
   FiXCircle,
@@ -228,6 +229,613 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     await performStatusUpdate("rejected", remark);
   };
 
+  function handlePrint() {
+    const printWindow = window.open("", "_blank", "width=1100,height=800");
+
+    if (!printWindow) {
+      setError(
+        "Unable to open the print window. Please allow pop-ups for this site.",
+      );
+
+      return;
+    }
+
+    const escapeHtml = (value) => {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    /*
+     * Hospital users do not have hospital information
+     * inside every grievance object because all grievances
+     * already belong to the logged-in hospital.
+     *
+     * Use the logged-in user's name for the Hospital module.
+     */
+    const hospitalName =
+      role === "hospital_user"
+        ? currentUser?.name || "Hospital"
+        : grievance.hospital || "N/A";
+
+    const reportTitle =
+      role === "hospital_user"
+        ? `Hospital Complaint Report`
+        : "ESIC Complaint Report";
+
+    const today = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(new Date());
+
+    const timeline = Array.isArray(grievance.timeline)
+      ? grievance.timeline
+      : [];
+
+    const timelineHtml =
+      timeline.length > 0
+        ? `
+        <section class="section">
+          <h2>Complaint Timeline</h2>
+
+          <div class="timeline">
+            ${timeline
+              .map(
+                (event) => `
+                  <div class="timeline-item">
+
+                    <div class="timeline-dot"></div>
+
+                    <div class="timeline-content">
+
+                      <div class="timeline-header">
+
+                        <strong>
+                          ${escapeHtml(
+                            event.title || event.eventType || "Timeline Update",
+                          )}
+                        </strong>
+
+                        <span>
+                          ${escapeHtml(formatDisplayDate(event.createdAt))}
+                        </span>
+
+                      </div>
+
+                      ${
+                        event.description
+                          ? `
+                            <p>
+                              ${escapeHtml(event.description)}
+                            </p>
+                          `
+                          : ""
+                      }
+
+                      ${
+                        event.createdByName || event.createdByUsername
+                          ? `
+                            <small>
+                              Updated by:
+                              ${escapeHtml(
+                                event.createdByName || event.createdByUsername,
+                              )}
+                            </small>
+                          `
+                          : ""
+                      }
+
+                    </div>
+
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+        </section>
+      `
+        : "";
+
+    const rejectionHtml =
+      currentStatus === "rejected" && currentRejectionRemark
+        ? `
+        <section class="section">
+
+          <h2>Rejection Remark</h2>
+
+          <div class="remark">
+            ${escapeHtml(currentRejectionRemark)}
+          </div>
+
+        </section>
+      `
+        : "";
+
+    const currentImageHtml = grievance.image
+      ? `
+        <div class="image-card">
+
+          <h3>Current Condition</h3>
+
+          <img
+            src="${escapeHtml(grievance.image)}"
+            alt="Current condition"
+          />
+
+        </div>
+      `
+      : `
+        <div class="image-card empty">
+
+          <h3>Current Condition</h3>
+
+          <p>
+            No current image available.
+          </p>
+
+        </div>
+      `;
+
+    const generatedImageHtml = grievance.generatedImageUrl
+      ? `
+        <div class="image-card">
+
+          <h3>Expected After Repair</h3>
+
+          <img
+            src="${escapeHtml(grievance.generatedImageUrl)}"
+            alt="Expected after repair"
+          />
+
+        </div>
+      `
+      : `
+        <div class="image-card empty">
+
+          <h3>Expected After Repair</h3>
+
+          <p>
+            No generated image available.
+          </p>
+
+        </div>
+      `;
+
+    printWindow.document.write(`
+    <!DOCTYPE html>
+
+    <html>
+
+      <head>
+
+        <title>
+          ${escapeHtml(grievance.tokenNo)} - Complaint Report
+        </title>
+
+        <style>
+
+          * {
+            box-sizing: border-box;
+          }
+
+          body {
+            margin: 0;
+            padding: 32px;
+            font-family:
+              Arial,
+              Helvetica,
+              sans-serif;
+            color: #1e293b;
+            background: #ffffff;
+          }
+
+          .report {
+            max-width: 1000px;
+            margin: 0 auto;
+          }
+
+          .header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+          }
+
+          .organization {
+            font-size: 12px;
+            font-weight: 700;
+            color: #f47216;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+          }
+
+          .report-title {
+            margin: 0;
+            font-size: 25px;
+            line-height: 1.25;
+            color: #172033;
+          }
+
+          .report-date {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #64748b;
+          }
+
+          .grievance-title {
+            margin-top: 18px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #172033;
+          }
+
+          .token {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 600;
+          }
+
+          .section {
+            margin-top: 26px;
+            page-break-inside: avoid;
+          }
+
+          .section h2 {
+            margin: 0 0 14px;
+            font-size: 16px;
+            color: #172033;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+          }
+
+          .details-grid {
+            display: grid;
+            grid-template-columns:
+              repeat(3, 1fr);
+            gap: 14px;
+          }
+
+          .detail {
+            border: 1px solid #e5e7eb;
+            padding: 13px;
+            border-radius: 6px;
+          }
+
+          .label {
+            display: block;
+            font-size: 10px;
+            color: #64748b;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+          }
+
+          .value {
+            font-size: 14px;
+            color: #172033;
+            font-weight: 600;
+          }
+
+          .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
+          }
+
+          .description {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #475569;
+            white-space: pre-wrap;
+          }
+
+          .images {
+            display: grid;
+            grid-template-columns:
+              repeat(2, 1fr);
+            gap: 18px;
+          }
+
+          .image-card {
+            border: 1px solid #dfe3e8;
+            border-radius: 6px;
+            overflow: hidden;
+            page-break-inside: avoid;
+          }
+
+          .image-card h3 {
+            margin: 0;
+            padding: 11px 13px;
+            font-size: 13px;
+            border-bottom: 1px solid #e5e7eb;
+          }
+
+          .image-card img {
+            display: block;
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+          }
+
+          .image-card.empty {
+            padding-bottom: 12px;
+          }
+
+          .image-card.empty p {
+            padding: 0 13px;
+            color: #64748b;
+            font-size: 13px;
+          }
+
+          .remark {
+            border: 1px solid #fecaca;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+
+          .timeline-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+            page-break-inside: avoid;
+          }
+
+          .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border: 2px solid #64748b;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex: 0 0 10px;
+          }
+
+          .timeline-content {
+            flex: 1;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+          }
+
+          .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            font-size: 13px;
+          }
+
+          .timeline-header span {
+            color: #64748b;
+            white-space: nowrap;
+          }
+
+          .timeline-content p {
+            margin: 7px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #475569;
+          }
+
+          .timeline-content small {
+            color: #64748b;
+          }
+
+          .footer {
+            margin-top: 35px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 10px;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+          }
+
+          @media print {
+
+            body {
+              padding: 15mm;
+            }
+
+            .section,
+            .image-card,
+            .timeline-item {
+              page-break-inside: avoid;
+            }
+
+          }
+
+        </style>
+
+      </head>
+
+      <body>
+
+        <div class="report">
+
+          <header class="header">
+
+            <div class="organization">
+              ESI(MB) Complaint Portal
+            </div>
+
+            <h1 class="report-title">
+              ${escapeHtml(reportTitle)}
+            </h1>
+
+            <div class="report-date">
+              ${escapeHtml(today)}
+            </div>
+
+            <div class="grievance-title">
+              ${escapeHtml(grievance.title)}
+            </div>
+
+            <div class="token">
+              Token No:
+              ${escapeHtml(grievance.tokenNo)}
+            </div>
+
+          </header>
+
+
+          <section class="section">
+
+            <h2>
+              Grievance Information
+            </h2>
+
+            <div class="details-grid">
+
+              <div class="detail">
+
+                <span class="label">
+                  Hospital
+                </span>
+
+                <span class="value">
+                  ${escapeHtml(hospitalName)}
+                </span>
+
+              </div>
+
+
+              <div class="detail">
+
+                <span class="label">
+                  Submitted On
+                </span>
+
+                <span class="value">
+                  ${escapeHtml(grievance.submittedOn || "N/A")}
+                </span>
+
+              </div>
+
+
+              <div class="detail">
+
+                <span class="label">
+                  Last Updated
+                </span>
+
+                <span class="value">
+                  ${escapeHtml(currentLastUpdated || "N/A")}
+                </span>
+
+              </div>
+
+
+              <div class="detail">
+
+                <span class="label">
+                  Status
+                </span>
+
+                <span class="status">
+                  ${escapeHtml(currentStatusLabel || "Unknown")}
+                </span>
+
+              </div>
+
+            </div>
+
+          </section>
+
+
+          <section class="section">
+
+            <h2>
+              Description
+            </h2>
+
+            <div class="description">
+              ${escapeHtml(grievance.description || "No description provided.")}
+            </div>
+
+          </section>
+
+
+          <section class="section">
+
+            <h2>
+              Images
+            </h2>
+
+            <div class="images">
+
+              ${currentImageHtml}
+
+              ${generatedImageHtml}
+
+            </div>
+
+          </section>
+
+
+          ${rejectionHtml}
+
+          ${timelineHtml}
+
+
+          <footer class="footer">
+
+            <span>
+              ESI(MB) Complaint Portal
+            </span>
+
+            <span>
+              Printed on
+              ${escapeHtml(
+                new Intl.DateTimeFormat("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date()),
+              )}
+            </span>
+
+          </footer>
+
+        </div>
+
+      </body>
+
+    </html>
+  `);
+
+    printWindow.document.close();
+
+    const images = printWindow.document.images;
+
+    const waitForImages = Array.from(images).map(
+      (image) =>
+        new Promise((resolve) => {
+          if (image.complete) {
+            resolve();
+            return;
+          }
+
+          image.onload = resolve;
+          image.onerror = resolve;
+        }),
+    );
+
+    Promise.all(waitForImages).then(() => {
+      printWindow.focus();
+      printWindow.print();
+    });
+  }
+
   async function performStatusUpdate(nextStatus, rejectionRemark = "") {
     setError("");
     setRejectionError("");
@@ -315,7 +923,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
           <div className="grievance-modal-header">
             <div>
-              <div className="modal-eyebrow">GRIEVANCE DETAILS</div>
+              <div className="modal-eyebrow">COMPLAINT DETAILS</div>
 
               <h2>{grievance.title}</h2>
 
@@ -324,12 +932,22 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
             <button
               type="button"
+              className="modal-print-button"
+              onClick={handlePrint}
+              disabled={isSaving}
+            >
+              <FiPrinter size={16} />
+              <span>Print</span>
+            </button>
+
+            {/* <button
+              type="button"
               className="modal-close"
               onClick={onClose}
               aria-label="Close modal"
             >
               <FiX size={21} />
-            </button>
+            </button> */}
           </div>
 
           {/* BODY */}

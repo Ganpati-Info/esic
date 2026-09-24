@@ -148,7 +148,12 @@ export async function exportToExcel(
  * EXPORT PDF
  * ========================================================== */
 
-export function exportToPDF(rows, filename = "export.pdf", title = "Export") {
+export function exportToPDF(
+  rows,
+  filename = "export.pdf",
+  title = "Export",
+  reportDate = "",
+) {
   if (!rows || !rows.length) {
     throw new Error("No data available to export.");
   }
@@ -156,7 +161,7 @@ export function exportToPDF(rows, filename = "export.pdf", title = "Export") {
   const normalizedRows = normalizeRows(rows);
 
   const doc = new jsPDF({
-    orientation: "portrait",
+    orientation: "landscape",
     unit: "mm",
     format: "a4",
   });
@@ -164,6 +169,12 @@ export function exportToPDF(rows, filename = "export.pdf", title = "Export") {
   doc.setFontSize(16);
 
   doc.text(title, 14, 15);
+
+  if (reportDate) {
+    doc.setFontSize(9);
+
+    doc.text(reportDate, 14, 21);
+  }
 
   const columns = Object.keys(normalizedRows[0]);
 
@@ -178,7 +189,7 @@ export function exportToPDF(rows, filename = "export.pdf", title = "Export") {
 
     body,
 
-    startY: 22,
+    startY: reportDate ? 28 : 22,
 
     theme: "grid",
 
@@ -223,17 +234,13 @@ export function exportToPDF(rows, filename = "export.pdf", title = "Export") {
  * HOSPITAL EXPORT
  * ========================================================== */
 
-export async function exportHospitals(
-  hospitals,
-  grievances = [],
-  format,
-) {
+export async function exportHospitals(hospitals, grievances = [], format) {
   if (!hospitals || !hospitals.length) {
-    throw new Error("No hospitals available to export.")
+    throw new Error("No hospitals available to export.");
   }
 
   if (!Array.isArray(grievances)) {
-    throw new Error("Grievance data is not available for export.")
+    throw new Error("Grievance data is not available for export.");
   }
 
   const getStatus = (grievance) => {
@@ -244,87 +251,75 @@ export async function exportHospitals(
         "",
     )
       .trim()
-      .toLowerCase()
+      .toLowerCase();
 
-    if (
-      status === "sent to director" ||
-      status === "pending"
-    ) {
-      return "pending"
+    if (status === "sent to director" || status === "pending") {
+      return "pending";
     }
 
-    if (
-      status === "sent to esic" ||
-      status === "delegated to esic"
-    ) {
-      return "sentToEsic"
+    if (status === "sent to esic" || status === "delegated to esic") {
+      return "sentToEsic";
     }
 
     if (status === "in progress") {
-      return "inProgress"
+      return "inProgress";
     }
 
     if (status === "resolved") {
-      return "resolved"
+      return "resolved";
     }
 
     if (status === "rejected") {
-      return "rejected"
+      return "rejected";
     }
 
-    return null
-  }
+    return null;
+  };
 
   const rows = hospitals.map((hospital) => {
-    const hospitalUsername = String(
-      hospital.username || "",
-    )
+    const hospitalUsername = String(hospital.username || "")
       .trim()
-      .toLowerCase()
+      .toLowerCase();
 
-    const hospitalGrievances = grievances.filter(
-      (grievance) => {
-        const grievanceUsername = String(
-          grievance.creator?.username ||
-            grievance.hospitalUsername ||
-            "",
-        )
-          .trim()
-          .toLowerCase()
+    const hospitalGrievances = grievances.filter((grievance) => {
+      const grievanceUsername = String(
+        grievance.creator?.username || grievance.hospitalUsername || "",
+      )
+        .trim()
+        .toLowerCase();
 
-        return grievanceUsername === hospitalUsername
-      },
-    )
+      return grievanceUsername === hospitalUsername;
+    });
 
-    let pending = 0
-    let sentToEsic = 0
-    let inProgress = 0
-    let resolved = 0
-    let rejected = 0
+    let pending = 0;
+    let sentToEsic = 0;
+    let inProgress = 0;
+    let resolved = 0;
+    let rejected = 0;
 
     hospitalGrievances.forEach((grievance) => {
-      const status = getStatus(grievance)
+      const status = getStatus(grievance);
 
       if (status === "pending") {
-        pending++
+        pending++;
       }
 
       if (status === "sentToEsic") {
-        sentToEsic++
+        sentToEsic++;
       }
 
       if (status === "inProgress") {
-        inProgress++
+        inProgress++;
       }
 
       if (status === "resolved") {
-        resolved++
+        resolved++;
       }
 
       if (status === "rejected") {
-        rejected++
+        rejected++;
       }
-    })
+    });
 
     return {
       "Hospital Name": hospital.name ?? "",
@@ -336,41 +331,119 @@ export async function exportHospitals(
       "In Progress": inProgress,
       Resolved: resolved,
       Rejected: rejected,
-    }
-  })
+    };
+  });
 
-  const date = new Date()
-    .toISOString()
-    .slice(0, 10)
+  const date = new Date().toISOString().slice(0, 10);
 
   if (format === "csv") {
-    exportToCSV(
-      rows,
-      `ESIC-Hospitals-${date}.csv`,
-    )
+    exportToCSV(rows, `ESIC-Hospitals-${date}.csv`);
 
-    return
+    return;
   }
 
   if (format === "excel") {
-    await exportToExcel(
-      rows,
-      `ESIC-Hospitals-${date}.xlsx`,
-      "Hospitals",
-    )
+    await exportToExcel(rows, `ESIC-Hospitals-${date}.xlsx`, "Hospitals");
 
-    return
+    return;
   }
+
+  if (format === "pdf") {
+    exportToPDF(rows, `ESIC-Hospitals-${date}.pdf`, "ESIC Hospital Directory");
+
+    return;
+  }
+
+  throw new Error("Unsupported export format.");
+}
+
+/* ==========================================================
+ * EXPORT GRIEVANCES
+ * ========================================================== */
+
+export async function exportGrievances(
+  grievances,
+  format,
+  filenamePrefix = "ESIC-Grievances",
+  hospitalName = "",
+) {
+  if (!Array.isArray(grievances) || !grievances.length) {
+    throw new Error("No grievances available to export.");
+  }
+
+  const isHospitalReport = Boolean(hospitalName?.trim());
+
+  const rows = grievances.map((grievance) => {
+    const row = {
+      "Token No.": grievance.tokenNo || "N/A",
+      "Complaint Title": grievance.title || "N/A",
+      "Submitted On": grievance.submittedOn || "N/A",
+      "Last Updated": grievance.lastUpdated || "N/A",
+      Status: grievance.status || "N/A",
+    };
+
+    /*
+     * ESIC report contains Hospital because
+     * it contains grievances from multiple hospitals.
+     *
+     * Hospital report does not contain Hospital
+     * because the hospital is already in the title.
+     */
+    if (!isHospitalReport) {
+      return {
+        "Token No.": grievance.tokenNo || "N/A",
+
+        Hospital: grievance.hospital || "N/A",
+
+        "Complaint Title": grievance.title || "N/A",
+
+        "Submitted On": grievance.submittedOn || "N/A",
+
+        "Last Updated": grievance.lastUpdated || "N/A",
+
+        Status: grievance.status || "N/A",
+      };
+    }
+
+    return row;
+  });
+
+  const now = new Date();
+
+  const date = now.toISOString().slice(0, 10);
+
+  const displayDate = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(now);
+
+  const reportTitle = isHospitalReport
+    ? `${hospitalName} Complaint Report`
+    : "ESIC Complaint Report";
 
   if (format === "pdf") {
     exportToPDF(
       rows,
-      `ESIC-Hospitals-${date}.pdf`,
-      "ESIC Hospital Directory",
-    )
+      `${filenamePrefix}-${date}.pdf`,
+      reportTitle,
+      displayDate,
+    );
 
-    return
+    return;
   }
 
-  throw new Error("Unsupported export format.")
+  if (format === "excel") {
+    await exportToExcel(rows, `${filenamePrefix}-${date}.xlsx`, "Complaints");
+
+    return;
+  }
+
+  if (format === "csv") {
+    exportToCSV(rows, `${filenamePrefix}-${date}.csv`);
+
+    return;
+  }
+
+  throw new Error("Unsupported export format.");
 }

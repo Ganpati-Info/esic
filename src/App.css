@@ -2458,7 +2458,7 @@ form {
 
 .grievance-modal-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
 
   gap: 20px;
@@ -7519,4 +7519,33 @@ form {
 
 .export-button:active {
   transform: translateY(1px);
+}
+
+.modal-print-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid #d7dee8;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #24364b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.modal-print-button:hover {
+  background: #f8fafc;
+  border-color: #b8c2cf;
+}
+
+.modal-print-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

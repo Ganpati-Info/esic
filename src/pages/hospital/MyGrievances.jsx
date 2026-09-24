@@ -14,6 +14,10 @@ import {
   FiFileText,
 } from "react-icons/fi";
 
+import { FaRegFilePdf, FaRegFileExcel } from "react-icons/fa";
+
+import { exportGrievances } from "../../lib/export";
+
 import { getGrievances } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
 import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
@@ -97,6 +101,39 @@ function MyGrievances() {
    */
   const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
     useState(null);
+
+  async function handleExport(format) {
+    try {
+      const storedUser = sessionStorage.getItem("esicUser");
+
+      let hospitalName = "";
+
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+
+          hospitalName = user.name || user.hospitalName || "";
+        } catch (error) {
+          console.error("Unable to read hospital information:", error);
+        }
+      }
+
+      if (!hospitalName) {
+        throw new Error("Hospital information is not available.");
+      }
+
+      await exportGrievances(
+        filteredGrievances,
+        format,
+        "Hospital-Complaints",
+        hospitalName,
+      );
+    } catch (err) {
+      console.error("Hospital grievance export complaint:", err);
+
+      setError(err.message || "Unable to export complaint.");
+    }
+  }
 
   function formatDisplayDate(value) {
     if (!value || value === "N/A") {
@@ -446,6 +483,32 @@ function MyGrievances() {
             )}
           </div>
 
+          <div className="export-actions">
+            <span className="export-label">Export as:</span>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("pdf")}
+              title="Export as PDF"
+            >
+              <FaRegFilePdf />
+
+              <span>PDF</span>
+            </button>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("excel")}
+              title="Export as Excel"
+            >
+              <FaRegFileExcel />
+
+              <span>Excel</span>
+            </button>
+          </div>
+
           {/* STATUS FILTER */}
 
           <div className="status-filter">
@@ -664,6 +727,8 @@ function MyGrievances() {
                 <option value={10}>10</option>
 
                 <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
 
               <FiChevronDown size={14} />
