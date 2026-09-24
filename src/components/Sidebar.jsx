@@ -57,7 +57,7 @@ function Sidebar({
         </button>
 
         {/* ===================================================
-            GRIEVANCES
+            COMPLAINTS
         =================================================== */}
 
         <div className="sidebar-section">
@@ -142,6 +142,57 @@ function Sidebar({
             </>
           )}
         </div>
+
+        {/* ===================================================
+            ADMINISTRATION
+            SUPER ADMIN ONLY
+        =================================================== */}
+
+        {isAdmin && (
+          <div className="sidebar-section">
+            <div className="sidebar-section-title">
+              Administration
+              <FiChevronDown size={17} />
+            </div>
+
+            {/* =================================================
+                HOSPITALS
+            ================================================= */}
+
+            <button
+              type="button"
+              className={
+                activeItem === "Hospitals"
+                  ? "sidebar-subitem active"
+                  : "sidebar-subitem"
+              }
+              onClick={() => onNavigate?.("Hospitals")}
+            >
+              <FaBuilding size={18} />
+
+              <span>Hospitals</span>
+            </button>
+
+            {/* =================================================
+                USERS
+                We'll connect this later
+            ================================================= */}
+
+            {/* <button
+              type="button"
+              className={
+                activeItem === "Users"
+                  ? "sidebar-subitem active"
+                  : "sidebar-subitem"
+              }
+              onClick={() => onNavigate?.("Users")}
+            >
+              <FiFileText size={19} />
+
+              <span>Users</span>
+            </button> */}
+          </div>
+        )}
       </nav>
 
       {/* =====================================================

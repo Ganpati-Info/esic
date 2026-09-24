@@ -18,6 +18,7 @@ import MyGrievances from "./pages/hospital/MyGrievances";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AllGrievances from "./pages/admin/AllGrievances";
+import Hospitals from "./pages/admin/Hospitals";
 
 import EsicDashboard from "./pages/esic/EsicDashboard";
 import EsicGrievances from "./pages/esic/EsicGrievances";
@@ -200,6 +201,7 @@ function AdminLayout() {
   const activeItems = {
     "/admin/dashboard": "Dashboard",
     "/admin/grievances": "All Grievances",
+    "/admin/hospitals": "Hospitals",
   };
 
   const activeItem = activeItems[location.pathname] || "Dashboard";
@@ -209,6 +211,8 @@ function AdminLayout() {
       Dashboard: "/admin/dashboard",
 
       "All Grievances": "/admin/grievances",
+
+      Hospitals: "/admin/hospitals",
 
       Logout: "/login",
     };
@@ -237,6 +241,8 @@ function AdminLayout() {
             <Route path="dashboard" element={<AdminDashboard />} />
 
             <Route path="grievances" element={<AllGrievances />} />
+
+            <Route path="hospitals" element={<Hospitals />} />
 
             <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Routes>
