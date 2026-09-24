@@ -14,9 +14,19 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
+import { FaRegFilePdf, FaRegFileExcel } from "react-icons/fa";
+
+import { exportToCSV, exportToExcel, exportToPDF } from "../../lib/export";
+
 import { getGrievances } from "../../lib/grievances";
+
 import GrievanceModal from "../../components/hospital/GrievanceModal";
+
 import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
+
+/* =========================================================
+   STATUS NORMALIZATION
+========================================================= */
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -46,6 +56,10 @@ function normalizeStatus(status) {
   }
 }
 
+/* =========================================================
+   SUPER ADMIN STATUS LABEL
+========================================================= */
+
 function getSuperAdminStatusLabel(status) {
   const normalized = normalizeStatus(status);
 
@@ -60,6 +74,10 @@ function getSuperAdminStatusLabel(status) {
   return normalized;
 }
 
+/* =========================================================
+   STATUS CLASS
+========================================================= */
+
 function getStatusClass(status) {
   if (!status) {
     return "";
@@ -70,6 +88,10 @@ function getStatusClass(status) {
     .replace(/_/g, "-")
     .replace(/\s+/g, "-");
 }
+
+/* =========================================================
+   DATE FORMAT
+========================================================= */
 
 function formatDisplayDate(value) {
   if (!value || value === "N/A") {
@@ -89,6 +111,10 @@ function formatDisplayDate(value) {
   }).format(date);
 }
 
+/* =========================================================
+   SORT ICON
+========================================================= */
+
 function SortIcon({ column, sortConfig }) {
   if (sortConfig.key !== column) {
     return <FiChevronsUpDown size={14} />;
@@ -100,6 +126,10 @@ function SortIcon({ column, sortConfig }) {
     <FiArrowDown size={14} />
   );
 }
+
+/* =========================================================
+   COMPONENT
+========================================================= */
 
 function AllGrievances() {
   const [grievances, setGrievances] = useState([]);
@@ -224,6 +254,67 @@ function AllGrievances() {
       };
     });
   };
+
+  /* =========================================================
+     EXPORT
+  ========================================================= */
+
+  async function handleExport(format) {
+    /*
+     * IMPORTANT:
+     * Export the filtered dataset, not the entire dataset.
+     */
+    if (!filteredGrievances.length) {
+      setError("No complaints available to export.");
+      return;
+    }
+
+    const rows = filteredGrievances.map((grievance) => ({
+      "Token No.": grievance.tokenNo || "N/A",
+
+      Hospital: grievance.hospital || "N/A",
+
+      "Grievance Title": grievance.title || "N/A",
+
+      "Submitted On": grievance.submittedOn || "N/A",
+
+      "Last Updated": grievance.lastUpdated || "N/A",
+
+      Status: getSuperAdminStatusLabel(grievance.status) || "N/A",
+    }));
+
+    const date = new Date().toISOString().slice(0, 10);
+
+    try {
+      if (format === "pdf") {
+        exportToPDF(
+          rows,
+          `ESIC-Complaints-${date}.pdf`,
+          "ESIC Complaint Directory",
+        );
+
+        return;
+      }
+
+      if (format === "excel") {
+        await exportToExcel(rows, `ESIC-Complaints-${date}.xlsx`, "Complaints");
+
+        return;
+      }
+
+      if (format === "csv") {
+        exportToCSV(rows, `ESIC-Complaints-${date}.csv`);
+
+        return;
+      }
+
+      throw new Error("Unsupported export format.");
+    } catch (err) {
+      console.error("Export failed:", err);
+
+      setError(err?.message || "Unable to export complaints.");
+    }
+  }
 
   /* =========================================================
      LOAD ALL GRIEVANCES
@@ -357,7 +448,8 @@ function AllGrievances() {
       const matchesSearch =
         !search ||
         String(grievance.tokenNo).toLowerCase().includes(search) ||
-        String(grievance.title).toLowerCase().includes(search);
+        String(grievance.title).toLowerCase().includes(search) ||
+        String(grievance.hospital).toLowerCase().includes(search);
 
       const matchesHospital =
         selectedHospital === "all" || grievance.hospital === selectedHospital;
@@ -412,16 +504,25 @@ function AllGrievances() {
      PAGINATION
   ========================================================= */
 
+  /*
+   * "all" means display every filtered complaint
+   * on a single page.
+   */
+  const effectiveRowsPerPage =
+    rowsPerPage === "all"
+      ? Math.max(filteredGrievances.length, 1)
+      : rowsPerPage;
+
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredGrievances.length / rowsPerPage),
+    Math.ceil(filteredGrievances.length / effectiveRowsPerPage),
   );
 
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
-  const startIndex = (safeCurrentPage - 1) * rowsPerPage;
+  const startIndex = (safeCurrentPage - 1) * effectiveRowsPerPage;
 
-  const endIndex = startIndex + rowsPerPage;
+  const endIndex = startIndex + effectiveRowsPerPage;
 
   const visibleGrievances = filteredGrievances.slice(startIndex, endIndex);
 
@@ -446,8 +547,11 @@ function AllGrievances() {
 
   const clearFilters = () => {
     setSearchTerm("");
+
     setSelectedHospital("all");
+
     setSelectedStatus("all");
+
     setCurrentPage(1);
   };
 
@@ -508,9 +612,48 @@ function AllGrievances() {
 
                 setCurrentPage(1);
               }}
-              placeholder="Search by token or title..."
+              placeholder="Search by token, hospital or title..."
             />
           </div>
+
+          {/* EXPORT */}
+
+          <div className="export-actions">
+            <span className="export-label">Export as:</span>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("pdf")}
+              title="Export as PDF"
+            >
+              <FaRegFilePdf />
+
+              <span>PDF</span>
+            </button>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("excel")}
+              title="Export as Excel"
+            >
+              <FaRegFileExcel />
+
+              <span>Excel</span>
+            </button>
+
+            <button
+              type="button"
+              className="export-button"
+              onClick={() => handleExport("csv")}
+              title="Export as CSV"
+            >
+              <span>CSV</span>
+            </button>
+          </div>
+
+          {/* FILTERS */}
 
           <div className="admin-filter">
             {/* HOSPITAL */}
@@ -787,18 +930,22 @@ function AllGrievances() {
               <select
                 value={rowsPerPage}
                 onChange={(event) => {
-                  setRowsPerPage(Number(event.target.value));
+                  const value = event.target.value;
+
+                  setRowsPerPage(value === "all" ? "all" : Number(value));
 
                   setCurrentPage(1);
                 }}
               >
-                <option value="5">5</option>
+                <option value={5}>5</option>
 
-                <option value="10">10</option>
+                <option value={10}>10</option>
 
-                <option value="20">20</option>
+                <option value={20}>20</option>
 
-                <option value="50">50</option>
+                <option value={50}>50</option>
+
+                <option value="all">All</option>
               </select>
 
               <FiChevronDown size={15} />
