@@ -214,6 +214,8 @@ function EsicGrievances() {
 
             title: grievance.title || "Untitled Grievance",
 
+            priority: Boolean(grievance.priority),
+
             hospital: grievance.creator?.name || "Unknown Hospital",
 
             hospitalUsername: grievance.creator?.username || "",

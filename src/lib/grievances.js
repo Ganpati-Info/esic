@@ -10,7 +10,7 @@ export async function getGrievances(token) {
     },
     body: JSON.stringify({
       query: `
-        query GetAllGrievances {
+  query GetAllGrievances {
   grievances(first: 100) {
     nodes {
       id
@@ -19,35 +19,32 @@ export async function getGrievances(token) {
       slug
       date
       modified
-
       creator {
         userId
         username
         name
       }
-
       grievanceDetails {
         tokenNumber
         description
         status
       }
-
       statusLabel
-currentImageUrl
-generatedImageUrl
-rejectionRemark
-
-timeline {
-  id
-  eventType
-  title
-  description
-  eta
-  createdAt
-  createdBy
-  createdByName
-  createdByUsername
-}
+      priority
+      currentImageUrl
+      generatedImageUrl
+      rejectionRemark
+      timeline {
+        id
+        eventType
+        title
+        description
+        eta
+        createdAt
+        createdBy
+        createdByName
+        createdByUsername
+      }
     }
   }
 }
@@ -358,4 +355,75 @@ export async function addGrievanceProgressUpdate(
   }
 
   return timelineEvent;
+}
+
+export async function updateGrievancePriority(token, grievanceId, priority) {
+  if (!token) {
+    throw new Error("Authentication session not found.");
+  }
+
+  const numericId = Number(grievanceId);
+
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  const graphqlId = window.btoa(`post:${numericId}`);
+
+  const mutation = `
+    mutation UpdateGrievancePriority($input: UpdateGrievanceInput!) {
+      updateGrievance(input: $input) {
+        grievance {
+          databaseId
+          modified
+          priority
+        }
+      }
+    }
+  `;
+
+  const input = {
+    clientMutationId: `priority-update-${numericId}-${Date.now()}`,
+    id: graphqlId,
+    priority: Boolean(priority),
+  };
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: mutation,
+        variables: {
+          input,
+        },
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the priority update response.");
+  }
+
+  if (!response.ok || result?.errors?.length) {
+    throw new Error(
+      result?.errors?.[0]?.message || "Unable to update grievance priority.",
+    );
+  }
+
+  const grievance = result?.data?.updateGrievance?.grievance;
+
+  if (!grievance) {
+    throw new Error("Grievance priority was not updated.");
+  }
+
+  return grievance;
 }

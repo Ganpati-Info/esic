@@ -326,7 +326,7 @@ function AdminDashboard() {
 
       <section className="grievances-card">
         <div className="section-header">
-          <h2>Recent Grievances</h2>
+          <h2>Recent Complaints</h2>
 
           <Link to="/admin/grievances" className="view-all">
             <span>View All</span>

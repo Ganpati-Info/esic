@@ -9,8 +9,12 @@ import {
   FiX,
   FiXCircle,
 } from "react-icons/fi";
+import { FiStar } from "react-icons/fi";
 
-import { updateGrievanceStatus } from "../../lib/grievances";
+import {
+  updateGrievanceStatus,
+  updateGrievancePriority,
+} from "../../lib/grievances";
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -140,6 +144,10 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     normalizeStatus(grievance?.status),
   );
 
+  const [isPriority, setIsPriority] = useState(Boolean(grievance?.priority));
+
+  const [isPrioritySaving, setIsPrioritySaving] = useState(false);
+
   const [currentStatusLabel, setCurrentStatusLabel] = useState(
     getStatusLabel(grievance?.status, currentUser?.role),
   );
@@ -208,6 +216,48 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     setRejectionError("");
     setError("");
     setIsRejectionModalOpen(true);
+  };
+
+  const handlePriorityToggle = async () => {
+    if (!isSuperAdmin || isPrioritySaving) {
+      return;
+    }
+
+    const nextPriority = !isPriority;
+
+    try {
+      setIsPrioritySaving(true);
+      setError("");
+
+      const token = sessionStorage.getItem("esicToken");
+
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
+
+      await updateGrievancePriority(token, grievance.id, nextPriority);
+
+      // Use the value we just requested.
+      // Do not depend on the mutation response for UI state.
+      setIsPriority(nextPriority);
+
+      if (typeof onStatusUpdate === "function") {
+        await onStatusUpdate({
+          grievanceId: grievance.id,
+          priority: nextPriority,
+        });
+      }
+
+      console.log("Priority update completed:", nextPriority);
+    } catch (updateError) {
+      console.error("Priority update failed:", updateError);
+
+      setError(updateError?.message || "Unable to update priority.");
+    } finally {
+      setIsPrioritySaving(false);
+    }
   };
 
   const handleCancelRejection = () => {
@@ -928,6 +978,24 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
               <h2>{grievance.title}</h2>
 
               <div className="modal-token">{grievance.tokenNo}</div>
+
+              {/* {isSuperAdmin && (
+                <button
+                  type="button"
+                  className={`priority-star ${isPriority ? "active" : ""}`}
+                  onClick={handlePriorityToggle}
+                  disabled={isPrioritySaving}
+                  title={isPriority ? "Remove priority" : "Mark as priority"}
+                  aria-label={
+                    isPriority ? "Remove priority" : "Mark as priority"
+                  }
+                >
+                  <FiStar
+                    size={20}
+                    fill={isPriority ? "currentColor" : "none"}
+                  />
+                </button>
+              )} */}
             </div>
 
             <button

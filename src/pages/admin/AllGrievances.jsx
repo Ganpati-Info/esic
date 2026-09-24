@@ -177,6 +177,7 @@ function AllGrievances() {
     statusLabel,
     rejectionRemark,
     modified,
+    priority,
   }) => {
     setGrievances((currentGrievances) =>
       currentGrievances.map((grievance) => {
@@ -194,14 +195,15 @@ function AllGrievances() {
           lastUpdated: modified
             ? formatDisplayDate(modified)
             : grievance.lastUpdated,
+
+          ...(priority !== undefined
+            ? {
+                priority: Boolean(priority),
+              }
+            : {}),
         };
       }),
     );
-
-    /*
-     * Keep the normal detail modal
-     * synchronized.
-     */
 
     setSelectedGrievance((currentGrievance) => {
       if (!currentGrievance) {
@@ -223,34 +225,12 @@ function AllGrievances() {
         lastUpdated: modified
           ? formatDisplayDate(modified)
           : currentGrievance.lastUpdated,
-      };
-    });
 
-    /*
-     * Keep timeline modal synchronized
-     * if it happens to be open.
-     */
-
-    setSelectedTimelineGrievance((currentGrievance) => {
-      if (!currentGrievance) {
-        return currentGrievance;
-      }
-
-      if (currentGrievance.id !== grievanceId) {
-        return currentGrievance;
-      }
-
-      return {
-        ...currentGrievance,
-
-        status: statusLabel || currentGrievance.status,
-
-        rejectionRemark:
-          rejectionRemark || currentGrievance.rejectionRemark || "",
-
-        lastUpdated: modified
-          ? formatDisplayDate(modified)
-          : currentGrievance.lastUpdated,
+        ...(priority !== undefined
+          ? {
+              priority: Boolean(priority),
+            }
+          : {}),
       };
     });
   };
@@ -275,6 +255,8 @@ function AllGrievances() {
       Hospital: grievance.hospital || "N/A",
 
       "Grievance Title": grievance.title || "N/A",
+
+      priority: Boolean(grievance.priority),
 
       "Submitted On": grievance.submittedOn || "N/A",
 

@@ -105,6 +105,32 @@ function getEventClass(eventType) {
   }
 }
 
+function getHospitalName(grievance) {
+  if (grievance?.hospital) {
+    return grievance.hospital;
+  }
+
+  if (grievance?.hospitalName) {
+    return grievance.hospitalName;
+  }
+
+  try {
+    const storedUser = sessionStorage.getItem("esicUser");
+
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+
+      if (user?.name) {
+        return user.name;
+      }
+    }
+  } catch (error) {
+    console.error("Unable to read hospital information:", error);
+  }
+
+  return "Unknown Hospital";
+}
+
 function GrievanceTimelineModal({ grievance, onClose, canEdit = false }) {
   const [timeline, setTimeline] = useState(grievance?.timeline || []);
 
@@ -142,6 +168,7 @@ function GrievanceTimelineModal({ grievance, onClose, canEdit = false }) {
   if (!grievance) {
     return null;
   }
+  const hospitalName = getHospitalName(grievance);
 
   const currentStatus = String(grievance.status || "")
     .trim()
@@ -242,7 +269,7 @@ function GrievanceTimelineModal({ grievance, onClose, canEdit = false }) {
 
         <div className="timeline-modal-header">
           <div>
-            <div className="timeline-modal-eyebrow">GRIEVANCE TIMELINE</div>
+            <div className="timeline-modal-eyebrow">COMPLAINT TIMELINE</div>
 
             <h2>{grievance.tokenNo || "Grievance"}</h2>
 
@@ -266,7 +293,7 @@ function GrievanceTimelineModal({ grievance, onClose, canEdit = false }) {
           <div className="timeline-summary-item">
             <span>Hospital</span>
 
-            <strong>{grievance.hospital || "Unknown Hospital"}</strong>
+            <strong>{hospitalName}</strong>
           </div>
 
           <div className="timeline-summary-item">
