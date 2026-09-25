@@ -18,6 +18,7 @@ import {
   resolveGrievance,
   sendGrievanceToEsic,
   updateReturnedGrievance,
+  returnGrievanceToHospital,
 } from "../../lib/grievances";
 
 import { uploadMedia } from "../../lib/media";
@@ -1995,6 +1996,8 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
             </div>
           )}
 
+          {}
+
           {/* FOOTER */}
 
           <div className="grievance-modal-footer">
@@ -2023,7 +2026,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                     <span>Cancel</span>
                   </button>
 
-                  <button
+                  {/* <button
                     type="button"
                     className="modal-workflow-button send"
                     onClick={handleSaveReturnedEdit}
@@ -2034,7 +2037,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                     <span>
                       {isEditingSaving ? "Saving..." : "Save Changes"}
                     </span>
-                  </button>
+                  </button> */}
                 </>
               )}
               {canReject && (
@@ -2050,6 +2053,21 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
               )}
 
               {/* instead of send to esic, it should be "send back to hospital" button */}
+
+              {canReturnToHospital && !isEditingReturned && (
+                <button
+                  type="button"
+                  className="modal-workflow-button send"
+                  onClick={handleOpenReturnModal}
+                  disabled={isReturning || isSaving}
+                >
+                  <FiSend size={16} />
+
+                  <span>
+                    {isReturning ? "Sending Back..." : "Send Back to Hospital"}
+                  </span>
+                </button>
+              )}
 
               {canSendToEsic && !isEditingReturned && (
                 <button
