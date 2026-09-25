@@ -290,6 +290,7 @@ function EsicGrievances() {
     statusLabel,
     rejectionRemark,
     modified,
+    timelineEvent,
   }) => {
     setGrievances((currentGrievances) =>
       currentGrievances.map((grievance) => {
@@ -303,6 +304,10 @@ function EsicGrievances() {
           status: statusLabel || grievance.status,
 
           rejectionRemark: rejectionRemark || grievance.rejectionRemark || "",
+
+          timeline: timelineEvent
+            ? [...(grievance.timeline || []), timelineEvent]
+            : grievance.timeline || [],
 
           lastUpdated: modified
             ? formatDisplayDate(modified)
@@ -333,6 +338,10 @@ function EsicGrievances() {
         rejectionRemark:
           rejectionRemark || currentGrievance.rejectionRemark || "",
 
+        timeline: timelineEvent
+          ? [...(currentGrievance.timeline || []), timelineEvent]
+          : currentGrievance.timeline || [],
+
         lastUpdated: modified
           ? formatDisplayDate(modified)
           : currentGrievance.lastUpdated,
@@ -361,9 +370,60 @@ function EsicGrievances() {
         rejectionRemark:
           rejectionRemark || currentGrievance.rejectionRemark || "",
 
+        timeline: timelineEvent
+          ? [...(currentGrievance.timeline || []), timelineEvent]
+          : currentGrievance.timeline || [],
+
         lastUpdated: modified
           ? formatDisplayDate(modified)
           : currentGrievance.lastUpdated,
+      };
+    });
+  };
+
+  const handleTimelineUpdate = ({
+    grievanceId,
+    status,
+    timelineEvent,
+    modified,
+  }) => {
+    setGrievances((currentGrievances) =>
+      currentGrievances.map((grievance) => {
+        if (grievance.id !== grievanceId) {
+          return grievance;
+        }
+
+        return {
+          ...grievance,
+          status: status || grievance.status,
+          lastUpdated: modified
+            ? formatDisplayDate(modified)
+            : grievance.lastUpdated,
+          timeline: timelineEvent
+            ? [...(grievance.timeline || []), timelineEvent]
+            : grievance.timeline || [],
+        };
+      }),
+    );
+
+    setSelectedTimelineGrievance((currentGrievance) => {
+      if (!currentGrievance) {
+        return currentGrievance;
+      }
+
+      if (currentGrievance.id !== grievanceId) {
+        return currentGrievance;
+      }
+
+      return {
+        ...currentGrievance,
+        status: status || currentGrievance.status,
+        lastUpdated: modified
+          ? formatDisplayDate(modified)
+          : currentGrievance.lastUpdated,
+        timeline: timelineEvent
+          ? [...(currentGrievance.timeline || []), timelineEvent]
+          : currentGrievance.timeline || [],
       };
     });
   };
@@ -941,6 +1001,7 @@ function EsicGrievances() {
         grievance={selectedTimelineGrievance}
         onClose={() => setSelectedTimelineGrievance(null)}
         canEdit={true}
+        onGrievanceUpdated={handleTimelineUpdate}
       />
     </div>
   );

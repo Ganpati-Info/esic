@@ -39,6 +39,10 @@ export async function getGrievances(token) {
         eventType
         title
         description
+        budget
+        mediaId
+        mediaUrl
+        mediaType
         eta
         createdAt
         createdBy
@@ -426,4 +430,232 @@ export async function updateGrievancePriority(token, grievanceId, priority) {
   }
 
   return grievance;
+}
+
+export async function createGrievanceSchedulePlan(
+  token,
+  { grievanceId, title, description, budget, mediaId, eta },
+) {
+  const variables = {
+    input: {
+      grievanceId: Number(grievanceId),
+      title,
+      description,
+      budget:
+        budget !== "" && budget !== null && budget !== undefined
+          ? Number(budget)
+          : null,
+      mediaId:
+        mediaId !== "" && mediaId !== null && mediaId !== undefined
+          ? Number(mediaId)
+          : null,
+      eta,
+    },
+  };
+
+  console.log("CREATE SCHEDULE PLAN VARIABLES:", variables);
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation CreateGrievanceSchedulePlan(
+            $input: CreateGrievanceSchedulePlanInput!
+          ) {
+            createGrievanceSchedulePlan(
+              input: $input
+            ) {
+              status
+
+              timelineEvent {
+                id
+                eventType
+                title
+                description
+                budget
+                mediaId
+                mediaUrl
+                mediaType
+                eta
+                createdAt
+                createdBy
+                createdByName
+                createdByUsername
+              }
+            }
+          }
+        `,
+        variables,
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read schedule plan response.");
+  }
+
+  console.log("CREATE SCHEDULE PLAN STATUS:", response.status);
+
+  console.log("CREATE SCHEDULE PLAN RESPONSE:", result);
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message ||
+        result?.message ||
+        `Schedule plan request failed with status ${response.status}.`,
+    );
+  }
+
+  if (result?.errors?.length) {
+    console.error("CREATE SCHEDULE PLAN GRAPHQL ERRORS:", result.errors);
+
+    throw new Error(
+      result.errors
+        .map((error) => error?.message)
+        .filter(Boolean)
+        .join(" | ") || "Unable to create the schedule plan.",
+    );
+  }
+
+  const payload = result?.data?.createGrievanceSchedulePlan;
+
+  if (!payload) {
+    throw new Error("Schedule plan mutation returned no data.");
+  }
+
+  if (!payload.timelineEvent) {
+    throw new Error("Schedule plan was not created.");
+  }
+
+  return {
+    status: payload.status,
+    timelineEvent: payload.timelineEvent,
+  };
+}
+
+export async function resolveGrievance(
+  token,
+  { grievanceId, resolutionRemark, mediaId },
+) {
+  if (!token) {
+    throw new Error("Authentication session not found. Please log in again.");
+  }
+
+  const numericGrievanceId = Number(grievanceId);
+  const numericMediaId = Number(mediaId);
+
+  if (!Number.isInteger(numericGrievanceId) || numericGrievanceId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  if (!Number.isInteger(numericMediaId) || numericMediaId <= 0) {
+    throw new Error("Resolution evidence is required.");
+  }
+
+  const trimmedRemark = String(resolutionRemark || "").trim();
+
+  if (!trimmedRemark) {
+    throw new Error("A resolution remark is required.");
+  }
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation ResolveGrievance(
+            $input: ResolveGrievanceInput!
+          ) {
+            resolveGrievance(
+              input: $input
+            ) {
+              status
+
+              timelineEvent {
+                id
+                eventType
+                title
+                description
+                budget
+                mediaId
+                mediaUrl
+                mediaType
+                eta
+                createdAt
+                createdBy
+                createdByName
+                createdByUsername
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            grievanceId: numericGrievanceId,
+            resolutionRemark: trimmedRemark,
+            mediaId: numericMediaId,
+          },
+        },
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the resolution response.");
+  }
+
+  console.log("RESOLVE GRIEVANCE STATUS:", response.status);
+
+  console.log("RESOLVE GRIEVANCE RESPONSE:", result);
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message ||
+        result?.message ||
+        `Resolution request failed with status ${response.status}.`,
+    );
+  }
+
+  if (result?.errors?.length) {
+    throw new Error(
+      result.errors
+        .map((error) => error?.message)
+        .filter(Boolean)
+        .join(" | ") || "Unable to resolve grievance.",
+    );
+  }
+
+  const payload = result?.data?.resolveGrievance;
+
+  if (!payload) {
+    throw new Error("Resolution mutation returned no data.");
+  }
+
+  if (!payload.timelineEvent) {
+    throw new Error("Grievance was not resolved.");
+  }
+
+  return {
+    status: payload.status,
+    timelineEvent: payload.timelineEvent,
+  };
 }

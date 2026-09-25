@@ -4,17 +4,21 @@ import {
   FiAlertCircle,
   FiCheckCircle,
   FiEdit3,
+  FiUpload,
   FiPrinter,
   FiSend,
+  FiStar,
   FiX,
   FiXCircle,
 } from "react-icons/fi";
-import { FiStar } from "react-icons/fi";
 
 import {
   updateGrievanceStatus,
   updateGrievancePriority,
+  resolveGrievance,
 } from "../../lib/grievances";
+
+import { uploadMedia } from "../../lib/media";
 
 function normalizeStatus(status) {
   const value = String(status || "")
@@ -137,6 +141,73 @@ function formatDisplayDate(value) {
   }).format(date);
 }
 
+function formatTimelineDate(value) {
+  if (!value) {
+    return "N/A";
+  }
+
+  const normalizedValue = String(value).replace(" ", "T");
+  const date = new Date(normalizedValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatTimelineBudget(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return String(value);
+  }
+
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(number);
+}
+
+function getTimelineEventLabel(eventType) {
+  switch (eventType) {
+    case "submitted":
+      return "Complaint Submitted";
+
+    case "sent_to_esic":
+      return "Complaint Sent to ESIC";
+
+    case "schedule_plan":
+      return "Schedule Plan";
+
+    case "in_progress":
+      return "In Progress";
+
+    case "progress_update":
+      return "Progress Update";
+
+    case "resolved":
+      return "Complaint Resolved";
+
+    case "rejected":
+      return "Complaint Rejected";
+
+    default:
+      return "Timeline Update";
+  }
+}
+
 function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
   const currentUser = getCurrentUser();
 
@@ -169,6 +240,16 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
   const [pendingRejectionRemark, setPendingRejectionRemark] = useState("");
 
   const [rejectionError, setRejectionError] = useState("");
+
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
+
+  const [resolutionRemark, setResolutionRemark] = useState("");
+
+  const [resolutionFile, setResolutionFile] = useState(null);
+
+  const [resolutionError, setResolutionError] = useState("");
+
+  const [isResolving, setIsResolving] = useState(false);
 
   useEffect(() => {
     if (!grievance) {
@@ -206,7 +287,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
   const canSendToEsic = isSuperAdmin && currentStatus === "pending";
 
-  const canMarkInProgress = isEsicOfficer && currentStatus === "sent to esic";
+  // const canMarkInProgress = isEsicOfficer && currentStatus === "sent to esic";
 
   const canResolve = isEsicOfficer && currentStatus === "in progress";
 
@@ -329,65 +410,199 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     const timelineHtml =
       timeline.length > 0
         ? `
-        <section class="section">
-          <h2>Complaint Timeline</h2>
+      <section class="section">
 
-          <div class="timeline">
-            ${timeline
-              .map(
-                (event) => `
-                  <div class="timeline-item">
+        <h2>
+          Complaint Timeline
+        </h2>
 
-                    <div class="timeline-dot"></div>
+        <div class="timeline">
 
-                    <div class="timeline-content">
+          ${timeline
+            .map((event) => {
+              const eventLabel = getTimelineEventLabel(event.eventType);
 
-                      <div class="timeline-header">
+              const mediaUrl = event.mediaUrl || "";
+
+              const mediaType = event.mediaType || "";
+
+              const isPdf =
+                mediaType === "application/pdf" ||
+                /\.pdf(\?|$)/i.test(mediaUrl);
+
+              const isImage =
+                mediaType.startsWith("image/") ||
+                /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(mediaUrl);
+
+              const mediaHtml = mediaUrl
+                ? isPdf
+                  ? `
+                    <div class="timeline-attachment">
+
+                      <div class="attachment-label">
+                        Supporting Document
+                      </div>
+
+                      <a
+                        href="${escapeHtml(mediaUrl)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="pdf-link"
+                      >
+                        View Supporting PDF
+                      </a>
+
+                    </div>
+                  `
+                  : isImage
+                    ? `
+                      <div class="timeline-attachment">
+
+                        <div class="attachment-label">
+                          Supporting Image
+                        </div>
+
+                        <a
+                          href="${escapeHtml(mediaUrl)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <img
+                            src="${escapeHtml(mediaUrl)}"
+                            alt="Supporting evidence"
+                            class="timeline-evidence-image"
+                          />
+                        </a>
+
+                      </div>
+                    `
+                    : `
+                      <div class="timeline-attachment">
+
+                        <div class="attachment-label">
+                          Supporting File
+                        </div>
+
+                        <a
+                          href="${escapeHtml(mediaUrl)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="pdf-link"
+                        >
+                          Open Supporting File
+                        </a>
+
+                      </div>
+                    `
+                : "";
+
+              const budgetHtml =
+                event.eventType === "schedule_plan" &&
+                event.budget !== null &&
+                event.budget !== undefined &&
+                event.budget !== ""
+                  ? `
+                    <div class="timeline-detail">
+
+                      <span class="timeline-detail-label">
+                        Budget
+                      </span>
+
+                      <strong>
+                        ${escapeHtml(formatTimelineBudget(event.budget))}
+                      </strong>
+
+                    </div>
+                  `
+                  : "";
+
+              const etaHtml = event.eta
+                ? `
+                  <div class="timeline-detail">
+
+                    <span class="timeline-detail-label">
+                      ETA / Tentative Completion
+                    </span>
+
+                    <strong>
+                      ${escapeHtml(formatTimelineDate(event.eta))}
+                    </strong>
+
+                  </div>
+                `
+                : "";
+
+              return `
+                <div class="timeline-item">
+
+                  <div class="timeline-dot"></div>
+
+                  <div class="timeline-content">
+
+                    <div class="timeline-header">
+
+                      <div>
 
                         <strong>
-                          ${escapeHtml(
-                            event.title || event.eventType || "Timeline Update",
-                          )}
+                          ${escapeHtml(event.title || eventLabel)}
                         </strong>
 
-                        <span>
-                          ${escapeHtml(formatDisplayDate(event.createdAt))}
-                        </span>
+                        <div class="timeline-event-type">
+                          ${escapeHtml(eventLabel)}
+                        </div>
 
                       </div>
 
-                      ${
-                        event.description
-                          ? `
-                            <p>
-                              ${escapeHtml(event.description)}
-                            </p>
-                          `
-                          : ""
-                      }
-
-                      ${
-                        event.createdByName || event.createdByUsername
-                          ? `
-                            <small>
-                              Updated by:
-                              ${escapeHtml(
-                                event.createdByName || event.createdByUsername,
-                              )}
-                            </small>
-                          `
-                          : ""
-                      }
+                      <span>
+                        ${escapeHtml(formatTimelineDate(event.createdAt))}
+                      </span>
 
                     </div>
 
+                    ${
+                      event.description
+                        ? `
+                          <p class="timeline-description">
+                            ${escapeHtml(event.description)}
+                          </p>
+                        `
+                        : ""
+                    }
+
+                    ${budgetHtml ? budgetHtml : ""}
+
+                    ${etaHtml ? etaHtml : ""}
+
+                    ${
+                      event.createdByName || event.createdByUsername
+                        ? `
+                          <div class="timeline-updated-by">
+
+                            Updated by:
+                            <strong>
+                              ${escapeHtml(
+                                event.createdByName || event.createdByUsername,
+                              )}
+                            </strong>
+
+                          </div>
+                        `
+                        : ""
+                    }
+
+                    ${mediaHtml}
+
                   </div>
-                `,
-              )
-              .join("")}
-          </div>
-        </section>
-      `
+
+                </div>
+              `;
+            })
+            .join("")}
+
+        </div>
+
+      </section>
+    `
         : "";
 
     const rejectionHtml =
@@ -492,6 +707,126 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
             border-bottom: 2px solid #e5e7eb;
             padding-bottom: 18px;
             margin-bottom: 24px;
+          }
+
+          .timeline-event-type {
+            margin-top: 4px;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            color: #f47216;
+
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+          }
+
+          .timeline-description {
+            margin: 8px 0;
+
+            font-size: 13px;
+            line-height: 1.6;
+
+            color: #475569;
+
+            white-space: pre-wrap;
+          }
+
+          .timeline-detail {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            margin-top: 9px;
+            padding: 8px 10px;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+
+            background: #f8fafc;
+          }
+
+          .timeline-detail-label {
+            color: #64748b;
+
+            font-size: 11px;
+            font-weight: 600;
+          }
+
+          .timeline-detail strong {
+            color: #172033;
+
+            font-size: 12px;
+          }
+
+          .timeline-updated-by {
+            margin-top: 9px;
+
+            color: #64748b;
+
+            font-size: 11px;
+          }
+
+          .timeline-updated-by strong {
+            color: #374151;
+          }
+
+          .timeline-attachment {
+            margin-top: 12px;
+
+            padding: 10px;
+
+            border: 1px solid #dbe1e8;
+            border-radius: 6px;
+
+            background: #ffffff;
+          }
+
+          .attachment-label {
+            margin-bottom: 8px;
+
+            color: #64748b;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+          }
+
+          .timeline-evidence-image {
+            display: block;
+
+            width: 100%;
+            max-width: 520px;
+            max-height: 350px;
+
+            object-fit: contain;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+          }
+
+          .pdf-link {
+            display: inline-block;
+
+            padding: 7px 10px;
+
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+
+            color: #1d4ed8;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            text-decoration: underline;
+          }
+
+          .pdf-link:hover {
+            color: #1e40af;
           }
 
           .organization {
@@ -739,7 +1074,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
           <section class="section">
 
             <h2>
-              Grievance Information
+              Complaint Information
             </h2>
 
             <div class="details-grid">
@@ -884,6 +1219,151 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
       printWindow.focus();
       printWindow.print();
     });
+  }
+
+  function handleOpenResolveModal() {
+    setResolutionRemark("");
+    setResolutionFile(null);
+    setResolutionError("");
+    setError("");
+    setIsResolveModalOpen(true);
+  }
+
+  function handleCancelResolve() {
+    if (isResolving) {
+      return;
+    }
+
+    setResolutionRemark("");
+    setResolutionFile(null);
+    setResolutionError("");
+    setIsResolveModalOpen(false);
+  }
+
+  function handleResolutionFileChange(event) {
+    const file = event.target.files?.[0] || null;
+
+    setResolutionError("");
+
+    if (!file) {
+      setResolutionFile(null);
+      return;
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "application/pdf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      event.target.value = "";
+      setResolutionFile(null);
+
+      setResolutionError(
+        "Only JPG, PNG, WEBP, GIF images or PDF files are allowed.",
+      );
+
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      event.target.value = "";
+      setResolutionFile(null);
+
+      setResolutionError("The resolution evidence must be smaller than 10 MB.");
+
+      return;
+    }
+
+    setResolutionFile(file);
+  }
+
+  async function handleConfirmResolve() {
+    const trimmedRemark = resolutionRemark.trim();
+
+    setResolutionError("");
+
+    if (!trimmedRemark) {
+      setResolutionError("Please describe how this grievance was resolved.");
+      return;
+    }
+
+    if (!resolutionFile) {
+      setResolutionError("Please upload resolution evidence.");
+      return;
+    }
+
+    try {
+      setIsResolving(true);
+
+      const token = sessionStorage.getItem("esicToken");
+
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
+
+      /*
+       * Upload the resolution evidence first.
+       */
+      const uploadedMedia = await uploadMedia(token, resolutionFile);
+
+      const mediaId = uploadedMedia?.id;
+
+      if (!mediaId) {
+        throw new Error("Resolution evidence upload failed.");
+      }
+
+      /*
+       * Resolve the grievance through the
+       * dedicated backend mutation.
+       */
+      const result = await resolveGrievance(token, {
+        grievanceId: grievance.id,
+        resolutionRemark: trimmedRemark,
+        mediaId,
+      });
+
+      const timelineEvent = result.timelineEvent;
+
+      setCurrentStatus("resolved");
+
+      setCurrentStatusLabel(getStatusLabel("resolved", currentUser?.role));
+
+      setCurrentLastUpdated(formatDisplayDate(new Date().toISOString()));
+
+      setIsResolveModalOpen(false);
+      setResolutionRemark("");
+      setResolutionFile(null);
+      setResolutionError("");
+
+      /*
+       * Tell the parent about the status and
+       * the new resolution timeline event.
+       */
+      if (typeof onStatusUpdate === "function") {
+        await onStatusUpdate({
+          grievanceId: grievance.id,
+          statusLabel: getStatusLabel("resolved", currentUser?.role),
+          modified: new Date().toISOString(),
+          timelineEvent,
+        });
+      }
+    } catch (resolveError) {
+      console.error("RESOLVE GRIEVANCE ERROR:", resolveError);
+
+      setResolutionError(
+        resolveError?.message || "Unable to resolve grievance.",
+      );
+    } finally {
+      setIsResolving(false);
+    }
   }
 
   async function performStatusUpdate(nextStatus, rejectionRemark = "") {
@@ -1238,7 +1718,7 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                 </button>
               )}
 
-              {canMarkInProgress && (
+              {/* {canMarkInProgress && (
                 <button
                   type="button"
                   className="modal-workflow-button progress"
@@ -1248,17 +1728,17 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                   <FiEdit3 size={16} />
                   <span>Mark In Progress</span>
                 </button>
-              )}
+              )} */}
 
               {canResolve && (
                 <button
                   type="button"
                   className="modal-workflow-button resolve"
-                  onClick={() => performStatusUpdate("resolved")}
-                  disabled={isSaving}
+                  onClick={handleOpenResolveModal}
+                  disabled={isSaving || isResolving}
                 >
                   <FiCheckCircle size={16} />
-                  <span>Mark Resolved</span>
+                  <span>Resolve Complaint</span>
                 </button>
               )}
 
@@ -1375,6 +1855,158 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                 disabled={isSaving}
               >
                 {isSaving ? "Rejecting..." : "Confirm Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isResolveModalOpen && (
+        <div className="resolve-modal-overlay" onClick={handleCancelResolve}>
+          <div
+            className="resolve-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="resolve-modal-header">
+              <div>
+                <div className="resolve-modal-eyebrow">RESOLUTION</div>
+
+                <h3>Resolve Complaint</h3>
+
+                <p>
+                  Provide the resolution details and upload evidence showing
+                  that the issue has been fixed.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="resolve-modal-close"
+                onClick={handleCancelResolve}
+                disabled={isResolving}
+                aria-label="Close resolve modal"
+              >
+                <FiX size={19} />
+              </button>
+            </div>
+
+            <div className="resolve-modal-body">
+              <div className="resolve-grievance-summary">
+                <span>COMPLAINT</span>
+
+                <strong>{grievance.title}</strong>
+
+                <small>{grievance.tokenNo}</small>
+              </div>
+
+              {resolutionError && (
+                <div className="resolve-modal-error">
+                  <FiAlertCircle size={17} />
+
+                  <span>{resolutionError}</span>
+                </div>
+              )}
+
+              <div className="resolve-form-group">
+                <label htmlFor="resolution-remark">
+                  Resolution Remark
+                  <span>*</span>
+                </label>
+
+                <textarea
+                  id="resolution-remark"
+                  value={resolutionRemark}
+                  onChange={(event) => setResolutionRemark(event.target.value)}
+                  placeholder="Describe what was repaired, replaced or completed and how the grievance was resolved..."
+                  rows={5}
+                  disabled={isResolving}
+                />
+
+                <small>
+                  Explain the actual work completed and why the grievance can
+                  now be considered resolved.
+                </small>
+              </div>
+
+              <div className="resolve-form-group">
+                <label htmlFor="resolution-evidence">
+                  Resolution Evidence
+                  <span>*</span>
+                </label>
+
+                <div className="resolve-file-upload">
+                  <input
+                    id="resolution-evidence"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                    onChange={handleResolutionFileChange}
+                    disabled={isResolving}
+                  />
+
+                  <label
+                    htmlFor="resolution-evidence"
+                    className="resolve-file-label"
+                  >
+                    <FiUpload size={18} />
+
+                    <span>
+                      {resolutionFile
+                        ? resolutionFile.name
+                        : "Choose repair evidence"}
+                    </span>
+                  </label>
+
+                  {resolutionFile && (
+                    <button
+                      type="button"
+                      className="resolve-file-remove"
+                      onClick={() => {
+                        if (!isResolving) {
+                          setResolutionFile(null);
+                        }
+                      }}
+                      disabled={isResolving}
+                      aria-label="Remove evidence"
+                    >
+                      <FiX size={15} />
+                    </button>
+                  )}
+                </div>
+
+                <small>
+                  Upload a photo showing the completed repair or a PDF
+                  completion report. Maximum 10 MB.
+                </small>
+              </div>
+            </div>
+
+            <div className="resolve-modal-footer">
+              <button
+                type="button"
+                className="resolve-cancel-button"
+                onClick={handleCancelResolve}
+                disabled={isResolving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="resolve-confirm-button"
+                onClick={handleConfirmResolve}
+                disabled={isResolving}
+              >
+                {isResolving ? (
+                  <>
+                    <span className="resolve-spinner" />
+                    <span>Resolving...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiCheckCircle size={16} />
+                    <span>Resolve Complaint</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
