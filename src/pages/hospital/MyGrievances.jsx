@@ -18,7 +18,7 @@ import { FaRegFilePdf, FaRegFileExcel } from "react-icons/fa";
 
 import { exportGrievances } from "../../lib/export";
 
-import { getGrievances } from "../../lib/grievances";
+import { getGrievances, sendGrievanceToEsic } from "../../lib/grievances";
 import GrievanceModal from "../../components/hospital/GrievanceModal";
 import GrievanceTimelineModal from "../../components/GrievanceTimelineModal";
 
@@ -31,6 +31,9 @@ function normalizeStatus(status) {
     case "pending":
     case "sent to director":
       return "Sent to Director";
+
+    case "returned to hospital":
+      return "Returned to Hospital";
 
     case "in progress":
       return "In Progress";
@@ -101,6 +104,78 @@ function MyGrievances() {
    */
   const [selectedTimelineGrievance, setSelectedTimelineGrievance] =
     useState(null);
+
+    const [isSendingToEsic, setIsSendingToEsic] = useState(false);
+
+    const [sendingGrievanceId, setSendingGrievanceId] = useState(null);
+
+    const [sendToEsicError, setSendToEsicError] = useState("");
+
+    const [sendToEsicSuccess, setSendToEsicSuccess] = useState("");
+
+    async function handleSendToEsic(grievance) {
+      const confirmed = window.confirm(
+        `Send "${grievance.title}" to ESIC for further processing?`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        setIsSendingToEsic(true);
+        setSendingGrievanceId(grievance.id);
+        setSendToEsicError("");
+        setSendToEsicSuccess("");
+
+        const token = sessionStorage.getItem("esicToken");
+
+        if (!token) {
+          throw new Error(
+            "Authentication session not found. Please log in again.",
+          );
+        }
+
+        const result = await sendGrievanceToEsic(token, {
+          grievanceId: grievance.id,
+        });
+
+        const updatedStatus = normalizeStatus(result.status);
+
+        setGrievances((current) =>
+          current.map((item) => {
+            if (item.id !== grievance.id) {
+              return item;
+            }
+
+            return {
+              ...item,
+
+              status: updatedStatus,
+
+              lastUpdated: formatDisplayDate(new Date().toISOString()),
+
+              timeline: result.timelineEvent
+                ? [...(item.timeline || []), result.timelineEvent]
+                : item.timeline || [],
+            };
+          }),
+        );
+
+        setSendToEsicSuccess("Complaint has been sent to ESIC successfully.");
+
+        setTimeout(() => {
+          setSendToEsicSuccess("");
+        }, 3500);
+      } catch (err) {
+        console.error("SEND TO ESIC ERROR:", err);
+
+        setSendToEsicError(err?.message || "Unable to send complaint to ESIC.");
+      } finally {
+        setIsSendingToEsic(false);
+        setSendingGrievanceId(null);
+      }
+    }
 
   async function handleExport(format) {
     try {
@@ -453,6 +528,30 @@ function MyGrievances() {
           TABLE CARD
       ===================================================== */}
 
+      {sendToEsicSuccess && (
+        <div className="send-esic-success">
+          <FiArrowUp size={17} />
+
+          <span>{sendToEsicSuccess}</span>
+        </div>
+      )}
+
+      {sendToEsicError && (
+        <div className="send-esic-error">
+          <FiX size={17} />
+
+          <span>{sendToEsicError}</span>
+
+          <button
+            type="button"
+            onClick={() => setSendToEsicError("")}
+            aria-label="Close error"
+          >
+            <FiX size={14} />
+          </button>
+        </div>
+      )}
+
       <section className="my-grievances-card">
         {/* ===================================================
             TOOLBAR
@@ -518,6 +617,8 @@ function MyGrievances() {
               <option value="All">All Statuses</option>
 
               <option value="Sent to Director">Sent to Director</option>
+
+              <option value="Returned to Hospital">Returned to Hospital</option>
 
               <option value="In Progress">In Progress</option>
 
@@ -691,6 +792,32 @@ function MyGrievances() {
 
                           <span>Timeline</span>
                         </button>
+
+                        {grievance.status === "Returned to Hospital" && (
+                          <button
+                            type="button"
+                            className="send-to-esic-button"
+                            onClick={() => handleSendToEsic(grievance)}
+                            disabled={
+                              isSendingToEsic &&
+                              sendingGrievanceId === grievance.id
+                            }
+                            title="Send complaint to ESIC"
+                          >
+                            {isSendingToEsic &&
+                            sendingGrievanceId === grievance.id ? (
+                              <>
+                                <span className="send-esic-spinner" />
+                                <span>Sending...</span>
+                              </>
+                            ) : (
+                              <>
+                                <FiArrowUp size={15} />
+                                <span>Send to ESIC</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -659,3 +659,322 @@ export async function resolveGrievance(
     timelineEvent: payload.timelineEvent,
   };
 }
+
+export async function returnGrievanceToHospital(
+  token,
+  { grievanceId, remark },
+) {
+  if (!token) {
+    throw new Error("Authentication session not found. Please log in again.");
+  }
+
+  const numericGrievanceId = Number(grievanceId);
+
+  if (!Number.isInteger(numericGrievanceId) || numericGrievanceId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  const trimmedRemark = String(remark || "").trim();
+
+  if (!trimmedRemark) {
+    throw new Error("A return remark is required.");
+  }
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        query: `
+          mutation ReturnGrievanceToHospital(
+            $input: ReturnGrievanceToHospitalInput!
+          ) {
+            returnGrievanceToHospital(
+              input: $input
+            ) {
+              status
+
+              timelineEvent {
+                id
+                eventType
+                title
+                description
+                budget
+                mediaId
+                mediaUrl
+                mediaType
+                eta
+                createdAt
+                createdBy
+                createdByName
+                createdByUsername
+              }
+            }
+          }
+        `,
+
+        variables: {
+          input: {
+            grievanceId: numericGrievanceId,
+            remark: trimmedRemark,
+          },
+        },
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the return grievance response.");
+  }
+
+  console.log("RETURN GRIEVANCE STATUS:", response.status);
+
+  console.log("RETURN GRIEVANCE RESPONSE:", result);
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message ||
+        result?.message ||
+        `Request failed with status ${response.status}.`,
+    );
+  }
+
+  if (result?.errors?.length) {
+    throw new Error(
+      result.errors
+        .map((error) => error?.message)
+        .filter(Boolean)
+        .join(" | ") || "Unable to return grievance to hospital.",
+    );
+  }
+
+  const payload = result?.data?.returnGrievanceToHospital;
+
+  if (!payload) {
+    throw new Error("Return grievance mutation returned no data.");
+  }
+
+  if (!payload.timelineEvent) {
+    throw new Error("Grievance was not returned to the hospital.");
+  }
+
+  return {
+    status: payload.status,
+    timelineEvent: payload.timelineEvent,
+  };
+}
+
+export async function sendGrievanceToEsic(token, { grievanceId }) {
+  if (!token) {
+    throw new Error("Authentication session not found. Please log in again.");
+  }
+
+  const numericGrievanceId = Number(grievanceId);
+
+  if (!Number.isInteger(numericGrievanceId) || numericGrievanceId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        query: `
+          mutation SendGrievanceToEsic(
+            $input: SendGrievanceToEsicInput!
+          ) {
+            sendGrievanceToEsic(
+              input: $input
+            ) {
+              status
+
+              timelineEvent {
+                id
+                eventType
+                title
+                description
+                budget
+                mediaId
+                mediaUrl
+                mediaType
+                eta
+                createdAt
+                createdBy
+                createdByName
+                createdByUsername
+              }
+            }
+          }
+        `,
+
+        variables: {
+          input: {
+            grievanceId: numericGrievanceId,
+          },
+        },
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the ESIC submission response.");
+  }
+
+  console.log("SEND TO ESIC STATUS:", response.status);
+
+  console.log("SEND TO ESIC RESPONSE:", result);
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message ||
+        result?.message ||
+        `Request failed with status ${response.status}.`,
+    );
+  }
+
+  if (result?.errors?.length) {
+    throw new Error(
+      result.errors
+        .map((error) => error?.message)
+        .filter(Boolean)
+        .join(" | ") || "Unable to send grievance to ESIC.",
+    );
+  }
+
+  const payload = result?.data?.sendGrievanceToEsic;
+
+  if (!payload) {
+    throw new Error("Send to ESIC mutation returned no data.");
+  }
+
+  if (!payload.timelineEvent) {
+    throw new Error("Grievance was not sent to ESIC.");
+  }
+
+  return {
+    status: payload.status,
+    timelineEvent: payload.timelineEvent,
+  };
+}
+
+export async function updateReturnedGrievance(
+  token,
+  { grievanceId, title, description },
+) {
+  if (!token) {
+    throw new Error("Authentication session not found. Please log in again.");
+  }
+
+  const numericGrievanceId = Number(grievanceId);
+
+  if (!Number.isInteger(numericGrievanceId) || numericGrievanceId <= 0) {
+    throw new Error("Invalid grievance ID.");
+  }
+
+  const trimmedTitle = String(title || "").trim();
+
+  const trimmedDescription = String(description || "").trim();
+
+  if (!trimmedTitle) {
+    throw new Error("Complaint title is required.");
+  }
+
+  if (!trimmedDescription) {
+    throw new Error("Complaint description is required.");
+  }
+
+  const response = await authenticatedFetch(
+    `${WP_BASE_URL}/graphql`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        query: `
+            mutation UpdateReturnedGrievance(
+              $input: UpdateReturnedGrievanceInput!
+            ) {
+              updateReturnedGrievance(
+                input: $input
+              ) {
+                title
+                description
+                modified
+              }
+            }
+          `,
+
+        variables: {
+          input: {
+            grievanceId: numericGrievanceId,
+
+            title: trimmedTitle,
+
+            description: trimmedDescription,
+          },
+        },
+      }),
+    },
+    token,
+  );
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Unable to read the grievance update response.");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      result?.errors?.[0]?.message ||
+        `Request failed with status ${response.status}.`,
+    );
+  }
+
+  if (result?.errors?.length) {
+    throw new Error(
+      result.errors
+        .map((error) => error?.message)
+        .filter(Boolean)
+        .join(" | ") || "Unable to update grievance.",
+    );
+  }
+
+  const payload = result?.data?.updateReturnedGrievance;
+
+  if (!payload) {
+    throw new Error("Grievance update returned no data.");
+  }
+
+  return {
+    title: payload.title,
+    description: payload.description,
+    modified: payload.modified,
+  };
+}

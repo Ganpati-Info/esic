@@ -16,6 +16,8 @@ import {
   updateGrievanceStatus,
   updateGrievancePriority,
   resolveGrievance,
+  sendGrievanceToEsic,
+  updateReturnedGrievance,
 } from "../../lib/grievances";
 
 import { uploadMedia } from "../../lib/media";
@@ -31,6 +33,9 @@ function normalizeStatus(status) {
     case "pending":
     case "sent to director":
       return "pending";
+
+    case "returned to hospital":
+      return "returned to hospital";
 
     case "in progress":
       return "in progress";
@@ -70,6 +75,9 @@ function getStatusLabel(status, role) {
     case "pending":
       return "Sent to Director";
 
+    case "returned to hospital":
+      return "Returned to Hospital";
+
     case "in progress":
       return "In Progress";
 
@@ -91,6 +99,9 @@ function getStatusClass(status) {
   switch (normalizeStatus(status)) {
     case "pending":
       return "pending";
+
+    case "returned to hospital":
+      return "returned-to-hospital";
 
     case "in progress":
       return "in-progress";
@@ -241,6 +252,14 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
   const [rejectionError, setRejectionError] = useState("");
 
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+
+  const [pendingReturnRemark, setPendingReturnRemark] = useState("");
+
+  const [returnError, setReturnError] = useState("");
+
+  const [isReturning, setIsReturning] = useState(false);
+
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
 
   const [resolutionRemark, setResolutionRemark] = useState("");
@@ -250,6 +269,20 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
   const [resolutionError, setResolutionError] = useState("");
 
   const [isResolving, setIsResolving] = useState(false);
+
+  const [isEditingReturned, setIsEditingReturned] = useState(false);
+
+  const [editTitle, setEditTitle] = useState("");
+
+  const [editDescription, setEditDescription] = useState("");
+
+  const [isEditingSaving, setIsEditingSaving] = useState(false);
+
+  const [editError, setEditError] = useState("");
+
+  const [isSendingToEsic, setIsSendingToEsic] = useState(false);
+
+  const [sendToEsicError, setSendToEsicError] = useState("");
 
   useEffect(() => {
     if (!grievance) {
@@ -269,6 +302,19 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     setIsRejectionModalOpen(false);
     setPendingRejectionRemark("");
     setRejectionError("");
+    setIsEditingReturned(false);
+
+    setEditTitle(grievance.title || "");
+
+    setEditDescription(grievance.description || "");
+
+    setIsEditingSaving(false);
+
+    setEditError("");
+
+    setIsSendingToEsic(false);
+
+    setSendToEsicError("");
   }, [grievance]);
 
   if (!grievance) {
@@ -283,9 +329,17 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
   const isEsicOfficer = role === "esic_user";
 
+  const isHospitalUser = role === "hospital_user";
+
+  const canEditReturned =
+    isHospitalUser && currentStatus === "returned to hospital";
+
+  const canSendToEsic =
+    isHospitalUser && currentStatus === "returned to hospital";
+
   const canReject = isSuperAdmin && currentStatus === "pending";
 
-  const canSendToEsic = isSuperAdmin && currentStatus === "pending";
+  const canReturnToHospital = isSuperAdmin && currentStatus === "pending";
 
   // const canMarkInProgress = isEsicOfficer && currentStatus === "sent to esic";
 
@@ -299,15 +353,91 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     setIsRejectionModalOpen(true);
   };
 
-  const handlePriorityToggle = async () => {
-    if (!isSuperAdmin || isPrioritySaving) {
+  const handleStartReturnedEdit = () => {
+    setEditTitle(grievance.title || "");
+    setEditDescription(grievance.description || "");
+    setEditError("");
+    setSendToEsicError("");
+    setIsEditingReturned(true);
+  };
+
+  const handleCancelReturnedEdit = () => {
+    if (isEditingSaving) {
       return;
     }
 
-    const nextPriority = !isPriority;
+    setEditTitle(grievance.title || "");
+    setEditDescription(grievance.description || "");
+    setEditError("");
+    setIsEditingReturned(false);
+  };
+
+  const handleSaveReturnedEdit = async () => {
+    const title = editTitle.trim();
+    const description = editDescription.trim();
+
+    if (!title) {
+      setEditError("Complaint title is required.");
+      return;
+    }
+
+    if (!description) {
+      setEditError("Complaint description is required.");
+      return;
+    }
 
     try {
-      setIsPrioritySaving(true);
+      setIsEditingSaving(true);
+      setEditError("");
+
+      const token = sessionStorage.getItem("esicToken");
+
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
+
+      const result = await updateReturnedGrievance(token, {
+        grievanceId: grievance.id,
+        title,
+        description,
+      });
+
+      setEditTitle(result.title);
+      setEditDescription(result.description);
+
+      if (typeof onStatusUpdate === "function") {
+        await onStatusUpdate({
+          grievanceId: grievance.id,
+          title: result.title,
+          description: result.description,
+          lastUpdated: result.modified,
+        });
+      }
+
+      setIsEditingReturned(false);
+    } catch (updateError) {
+      console.error("Returned grievance update failed:", updateError);
+
+      setEditError(updateError?.message || "Unable to update complaint.");
+    } finally {
+      setIsEditingSaving(false);
+    }
+  };
+
+  const handleSendToEsic = async () => {
+    const confirmed = window.confirm(
+      "Send this complaint to ESIC for further processing?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setIsSendingToEsic(true);
+      setSendToEsicError("");
       setError("");
 
       const token = sessionStorage.getItem("esicToken");
@@ -318,28 +448,75 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
         );
       }
 
-      await updateGrievancePriority(token, grievance.id, nextPriority);
+      const result = await sendGrievanceToEsic(token, {
+        grievanceId: grievance.id,
+      });
 
-      // Use the value we just requested.
-      // Do not depend on the mutation response for UI state.
-      setIsPriority(nextPriority);
+      setCurrentStatus(normalizeStatus(result.status));
+
+      setCurrentStatusLabel(getStatusLabel(result.status, role));
+
+      setCurrentLastUpdated(formatDisplayDate(new Date().toISOString()));
 
       if (typeof onStatusUpdate === "function") {
         await onStatusUpdate({
           grievanceId: grievance.id,
-          priority: nextPriority,
+          status: result.status,
+          timelineEvent: result.timelineEvent,
         });
       }
+    } catch (sendError) {
+      console.error("Send to ESIC failed:", sendError);
 
-      console.log("Priority update completed:", nextPriority);
-    } catch (updateError) {
-      console.error("Priority update failed:", updateError);
-
-      setError(updateError?.message || "Unable to update priority.");
+      setSendToEsicError(
+        sendError?.message || "Unable to send complaint to ESIC.",
+      );
     } finally {
-      setIsPrioritySaving(false);
+      setIsSendingToEsic(false);
     }
   };
+
+  // const handlePriorityToggle = async () => {
+  //   if (!isSuperAdmin || isPrioritySaving) {
+  //     return;
+  //   }
+
+  //   const nextPriority = !isPriority;
+
+  //   try {
+  //     setIsPrioritySaving(true);
+  //     setError("");
+
+  //     const token = sessionStorage.getItem("esicToken");
+
+  //     if (!token) {
+  //       throw new Error(
+  //         "Authentication session not found. Please log in again.",
+  //       );
+  //     }
+
+  //     await updateGrievancePriority(token, grievance.id, nextPriority);
+
+  //     // Use the value we just requested.
+  //     // Do not depend on the mutation response for UI state.
+  //     setIsPriority(nextPriority);
+
+  //     if (typeof onStatusUpdate === "function") {
+  //       await onStatusUpdate({
+  //         grievanceId: grievance.id,
+  //         priority: nextPriority,
+  //       });
+  //     }
+
+  //     console.log("Priority update completed:", nextPriority);
+  //   } catch (updateError) {
+  //     console.error("Priority update failed:", updateError);
+
+  //     setError(updateError?.message || "Unable to update priority.");
+  //   } finally {
+  //     setIsPrioritySaving(false);
+  //   }
+  // };
 
   const handleCancelRejection = () => {
     setPendingRejectionRemark("");
@@ -358,6 +535,92 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
     }
 
     await performStatusUpdate("rejected", remark);
+  };
+
+  const handleOpenReturnModal = () => {
+    setPendingReturnRemark("");
+    setReturnError("");
+    setError("");
+    setIsReturnModalOpen(true);
+  };
+
+  const handleCancelReturn = () => {
+    if (isReturning) {
+      return;
+    }
+
+    setPendingReturnRemark("");
+    setReturnError("");
+    setIsReturnModalOpen(false);
+  };
+
+  const handleConfirmReturn = async () => {
+    const remark = pendingReturnRemark.trim();
+
+    setReturnError("");
+
+    if (!remark) {
+      setReturnError(
+        "Please provide a reason for returning this grievance to the hospital.",
+      );
+
+      return;
+    }
+
+    try {
+      setIsReturning(true);
+      setError("");
+
+      const token = sessionStorage.getItem("esicToken");
+
+      if (!token) {
+        throw new Error(
+          "Authentication session not found. Please log in again.",
+        );
+      }
+
+      const result = await returnGrievanceToHospital(token, {
+        grievanceId: grievance.id,
+        remark,
+      });
+
+      const timelineEvent = result.timelineEvent;
+
+      const updatedStatus = normalizeStatus(result.status);
+
+      const updatedStatusLabel = getStatusLabel(
+        result.status,
+        currentUser?.role,
+      );
+
+      setCurrentStatus(updatedStatus);
+
+      setCurrentStatusLabel(updatedStatusLabel);
+
+      setCurrentLastUpdated(formatDisplayDate(new Date().toISOString()));
+
+      setIsReturnModalOpen(false);
+      setPendingReturnRemark("");
+      setReturnError("");
+
+      if (typeof onStatusUpdate === "function") {
+        await onStatusUpdate({
+          grievanceId: grievance.id,
+          status: updatedStatus,
+          statusLabel: updatedStatusLabel,
+          modified: new Date().toISOString(),
+          timelineEvent,
+        });
+      }
+    } catch (returnErrorValue) {
+      console.error("RETURN GRIEVANCE ERROR:", returnErrorValue);
+
+      setReturnError(
+        returnErrorValue?.message || "Unable to return grievance to hospital.",
+      );
+    } finally {
+      setIsReturning(false);
+    }
   };
 
   function handlePrint() {
@@ -1455,7 +1718,21 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
             <div>
               <div className="modal-eyebrow">COMPLAINT DETAILS</div>
 
-              <h2>{grievance.title}</h2>
+              {canEditReturned && isEditingReturned ? (
+                <div className="returned-edit-field">
+                  <label>Complaint Title</label>
+
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(event) => setEditTitle(event.target.value)}
+                    maxLength={200}
+                    placeholder="Enter complaint title"
+                  />
+                </div>
+              ) : (
+                <h2>{editTitle || grievance.title}</h2>
+              )}
 
               <div className="modal-token">{grievance.tokenNo}</div>
 
@@ -1626,7 +1903,21 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
             <div className="modal-description">
               <span className="modal-label">Description</span>
 
-              <p>{grievance.description || "No description provided."}</p>
+              {canEditReturned && isEditingReturned ? (
+                <textarea
+                  className="returned-description-input"
+                  value={editDescription}
+                  onChange={(event) => setEditDescription(event.target.value)}
+                  rows={6}
+                  placeholder="Enter complaint description"
+                />
+              ) : (
+                <p>
+                  {editDescription ||
+                    grievance.description ||
+                    "No description provided."}
+                </p>
+              )}
             </div>
 
             {/* IMAGES */}
@@ -1688,10 +1979,64 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
             </div>
           </div>
 
+          {canEditReturned && isEditingReturned && editError && (
+            <div className="returned-edit-error">
+              <FiAlertCircle size={16} />
+
+              <span>{editError}</span>
+            </div>
+          )}
+
+          {canSendToEsic && sendToEsicError && (
+            <div className="returned-edit-error">
+              <FiAlertCircle size={16} />
+
+              <span>{sendToEsicError}</span>
+            </div>
+          )}
+
           {/* FOOTER */}
 
           <div className="grievance-modal-footer">
             <div className="modal-footer-actions">
+              {canEditReturned && !isEditingReturned && (
+                <button
+                  type="button"
+                  className="modal-workflow-button edit"
+                  onClick={handleStartReturnedEdit}
+                  disabled={isSaving}
+                >
+                  <FiEdit3 size={16} />
+                  <span>Edit Complaint</span>
+                </button>
+              )}
+
+              {canEditReturned && isEditingReturned && (
+                <>
+                  <button
+                    type="button"
+                    className="modal-workflow-button cancel"
+                    onClick={handleCancelReturnedEdit}
+                    disabled={isEditingSaving}
+                  >
+                    <FiX size={16} />
+                    <span>Cancel</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="modal-workflow-button send"
+                    onClick={handleSaveReturnedEdit}
+                    disabled={isEditingSaving}
+                  >
+                    <FiCheckCircle size={16} />
+
+                    <span>
+                      {isEditingSaving ? "Saving..." : "Save Changes"}
+                    </span>
+                  </button>
+                </>
+              )}
               {canReject && (
                 <button
                   type="button"
@@ -1706,15 +2051,16 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
 
               {/* instead of send to esic, it should be "send back to hospital" button */}
 
-              {canSendToEsic && (
+              {canSendToEsic && !isEditingReturned && (
                 <button
                   type="button"
                   className="modal-workflow-button send"
-                  onClick={() => performStatusUpdate("sent to esic")}
-                  disabled={isSaving}
+                  onClick={handleSendToEsic}
+                  disabled={isSendingToEsic || isSaving}
                 >
                   <FiSend size={16} />
-                  <span>Send to ESIC</span>
+
+                  <span>{isSendingToEsic ? "Sending..." : "Send to ESIC"}</span>
                 </button>
               )}
 
@@ -1855,6 +2201,117 @@ function GrievanceModal({ grievance, onClose, onStatusUpdate }) {
                 disabled={isSaving}
               >
                 {isSaving ? "Rejecting..." : "Confirm Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isReturnModalOpen && (
+        <div className="return-modal-overlay" onClick={handleCancelReturn}>
+          <div
+            className="return-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="return-modal-header">
+              <div className="return-modal-title">
+                <div className="return-icon">
+                  <FiSend size={20} />
+                </div>
+
+                <div>
+                  <h3>Send Back to Hospital</h3>
+
+                  <p>
+                    Return this complaint to the hospital for review and further
+                    action.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="return-modal-close"
+                onClick={handleCancelReturn}
+                disabled={isReturning}
+                aria-label="Close return modal"
+              >
+                <FiX size={19} />
+              </button>
+            </div>
+
+            <div className="return-modal-body">
+              <div className="return-grievance-info">
+                <span>Token Number</span>
+
+                <strong>{grievance.tokenNo}</strong>
+              </div>
+
+              <div className="return-grievance-info">
+                <span>Complaint</span>
+
+                <strong>{grievance.title}</strong>
+              </div>
+
+              <label htmlFor="return-remark" className="return-modal-label">
+                Return Remark
+                <span>*</span>
+              </label>
+
+              <textarea
+                id="return-remark"
+                value={pendingReturnRemark}
+                onChange={(event) => {
+                  setPendingReturnRemark(event.target.value);
+
+                  setReturnError("");
+                }}
+                placeholder="Explain what needs to be reviewed, corrected or addressed by the hospital..."
+                rows={6}
+                maxLength={1000}
+                disabled={isReturning}
+                autoFocus
+              />
+
+              <div className="return-modal-bottom">
+                {returnError ? (
+                  <span className="return-modal-error">{returnError}</span>
+                ) : (
+                  <span>
+                    The hospital will receive this complaint for further action.
+                  </span>
+                )}
+
+                <span className="return-character-count">
+                  {pendingReturnRemark.length}/1000
+                </span>
+              </div>
+            </div>
+
+            <div className="return-modal-footer">
+              <button
+                type="button"
+                className="return-cancel-button"
+                onClick={handleCancelReturn}
+                disabled={isReturning}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="return-confirm-button"
+                onClick={handleConfirmReturn}
+                disabled={isReturning}
+              >
+                {isReturning ? (
+                  "Sending..."
+                ) : (
+                  <>
+                    <FiSend size={16} />
+                    <span>Send Back to Hospital</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
